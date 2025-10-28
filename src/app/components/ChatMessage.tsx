@@ -10,15 +10,17 @@ export default function ChatMessage({ sender, message }: ChatMessageProps) {
   const isUser = sender === "user";
   return (
     <motion.div
-      className={`flex w-full mb-4 ${isUser ? "justify-end" : "justify-start"}`}
-      initial={{ opacity: 0, y: 10 }}
+      className={`flex w-full mb-3 ${isUser ? "justify-end" : "justify-start"}`}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
     >
       <div
-        className={`max-w-[75%] p-3 rounded-2xl shadow-md text-sm md:text-base ${
+  role="article"
+  aria-label={isUser ? "Your message" : "AI Mufti response"}
+        className={`max-w-[80%] p-3 rounded-2xl text-sm md:text-base shadow ${
           isUser
-            ? "bg-green-600 text-white rounded-br-none"
-            : "bg-white/90 text-gray-800 rounded-bl-none border border-green-100"
+            ? "bg-linear-to-br from-green-600 to-green-500 text-white rounded-br-none"
+            : "bg-white/95 text-gray-900 rounded-bl-none border border-green-50"
         }`}
       >
         {message}

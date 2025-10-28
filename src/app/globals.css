@@ -1,34 +1,84 @@
 @import "tailwindcss";
 
+/* Theme tokens */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --bg-1: #f7fdf6; /* pale green */
+  --bg-2: #ffffff;
+  --accent: #16a34a; /* green-600 */
+  --muted: #6b7280;
+  --glass: rgba(255,255,255,0.6);
+  --card: #ffffff;
+  --glass-border: rgba(16,185,129,0.08);
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg-1: #07120b;
+    --bg-2: #071913;
+    --accent: #22c55e;
+    --muted: #9ca3af;
+    --glass: rgba(10,10,10,0.5);
+    --card: #071913;
+    --glass-border: rgba(34,197,94,0.08);
   }
 }
 
-body {
-  font-family: "Poppins", "Noto Nastaliq Urdu", sans-serif;
-  background-color: #fdfdfd;
+/* Page baseline */
+html, body, #__next {
+  height: 100%;
 }
 
+body {
+  font-family: var(--font-sans), system-ui, -apple-system, "Segoe UI", Roboto, "Noto Nastaliq Urdu", sans-serif;
+  background: radial-gradient(1200px 600px at 10% 10%, rgba(22,163,74,0.06), transparent), linear-gradient(180deg, var(--bg-1), var(--bg-2));
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Improved scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #16a34a;
-  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(23,163,74,0.9), rgba(16,185,129,0.9));
+  border-radius: 999px;
+}
+
+/* Utility: world-class container */
+.app-container {
+  max-width: 1080px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+/* Card */
+.glass-card {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(8px) saturate(120%);
+  border-radius: 18px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border-width: 0;
 }

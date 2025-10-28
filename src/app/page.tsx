@@ -1,57 +1,51 @@
 "use client";
 
-import { useEffect } from "react";
 import ChatBox from "./components/ChatBox";
 
 export default function HomePage() {
-  // Initialize Google AdSense after render
-  useEffect(() => {
-    try {
-      // @ts-ignore
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch (e) {
-      console.log("AdSense error:", e);
-    }
-  }, []);
-
   return (
-    <main className="flex flex-col items-center justify-between min-h-screen">
-      {/* Header */}
-      <header className="py-6 text-center">
-        <h1 className="text-3xl md:text-4xl font-bold text-green-700">
-          🤖 Digital Mufti
-        </h1>
-        <p className="text-sm text-gray-600 mt-2">
-          AI Islamic Scholar | Sunni Hanafi Fiqh | Authentic Fatwas
-        </p>
-      </header>
+    <div className="space-y-8">
+      <section className="glass-card p-8">
+        <div className="flex flex-col md:flex-row items-center gap-8">
+          <div className="flex-1">
+            <h2 className="text-3xl md:text-4xl font-extrabold">Ask the AI Mufti — Clear. Concise. Sourced.</h2>
+            <p className="mt-3 text-gray-600 max-w-xl">
+              AI Mufti answers Islamic jurisprudence questions with respect to Sunni Hanafi sources. Use natural language — AI Mufti will respond conversationally and cite evidences where applicable.
+            </p>
 
-      {/* Chat Section */}
-      <section className="flex-1 w-full max-w-2xl bg-white/70 backdrop-blur-md rounded-3xl shadow-lg p-6 mb-4 border border-green-100">
-        <ChatBox />
+            <ul className="mt-6 space-y-2 text-sm text-muted-foreground">
+              <li>• Respectful, faith-aware assistant trained on trusted Hanafi references.</li>
+              <li>• Clear rulings, explanations, and follow-up suggestions.</li>
+              <li>• Designed for learners, students, and practitioners.</li>
+            </ul>
+
+            <div className="mt-6 flex gap-3">
+              <a href="/chat" className="px-4 py-2 rounded-full bg-green-600 text-white shadow hover:bg-green-700">Start a chat</a>
+              <a href="#learn" className="px-4 py-2 rounded-full border border-green-100">How it works</a>
+            </div>
+          </div>
+
+          <div className="w-full md:w-96">
+            <div className="p-1 rounded-2xl bg-linear-to-br from-green-400 to-green-200 shadow-lg">
+              <div className="bg-white rounded-xl p-4">
+                <small className="text-xs text-muted-foreground">Example question</small>
+                <p className="mt-2 font-medium">Is it permissible to fast on the 13th, 14th, 15th of every Islamic month?</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
-      {/* Footer with AdSense */}
-      <footer className="w-full text-center py-4 border-t border-green-200">
-        <p className="text-xs text-gray-600">
-          © {new Date().getFullYear()} Digital Mufti — Powered by{" "}
-          <span className="font-semibold text-green-700">
-            Sabter Raza Qadri
-          </span>
-        </p>
-
-        {/* ✅ Google AdSense Banner */}
-        <div className="mt-3 flex justify-center">
-          <ins
-            className="adsbygoogle"
-            style={{ display: "block", width: "100%", height: "90px" }}
-            data-ad-client="ca-pub-7846074061736370"
-            data-ad-slot="1234567890" // ⚠️ apna real ad slot yahan likhna
-            data-ad-format="auto"
-            data-full-width-responsive="true"
-          ></ins>
+      <section id="chat" className="glass-card p-6">
+  <h3 className="text-lg font-semibold">Start your question with AI Mufti</h3>
+        <div className="mt-4">
+          <ChatBox />
         </div>
+      </section>
+
+      <footer className="text-xs text-muted-foreground text-center">
+  © {new Date().getFullYear()} AI Mufti — Built with care.
       </footer>
-    </main>
+    </div>
   );
 }
