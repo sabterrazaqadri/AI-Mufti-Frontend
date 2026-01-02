@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import ChatMessage from "./ChatMessage";
-import TypingIndicator from "./TypingIndicator";
 
 interface Message {
   role: "user" | "assistant";
@@ -13,15 +12,14 @@ export default function ChatBox() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://digital-mufti-backend.onrender.com";
 
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    // Auto-scroll on new messages
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
   const sendMessage = async () => {
@@ -34,7 +32,6 @@ export default function ChatBox() {
     setLoading(true);
 
     try {
-      // Start streaming request to backend which returns a streaming text response.
       const res = await fetch(`${API_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -43,12 +40,12 @@ export default function ChatBox() {
 
       if (!res.ok) throw new Error(res.statusText);
 
-      // Prepare a placeholder assistant message and then stream into it.
+      // Create placeholder for assistant message
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
       const reader = res.body?.getReader();
       if (!reader) {
-        // Some backends return full JSON body instead of stream
+        // Fallback: non-streaming response
         const data = await res.json();
         const replyText = typeof data === "string" ? data : data?.reply || JSON.stringify(data);
         setMessages((prev) => {
@@ -63,30 +60,18 @@ export default function ChatBox() {
       let done = false;
       let accumulated = "";
 
-      // The backend might stream plain text, or NDJSON/JSON chunks like {"reply":"..."}
-      const buffer = [] as string[];
-
       while (!done) {
         const { value, done: readerDone } = await reader.read();
         done = readerDone;
         if (value) {
           const chunk = decoder.decode(value, { stream: true });
-          buffer.push(chunk);
 
-          // Try to parse recent buffer as JSON objects (NDJSON) and extract `reply` if present
-          const joined = buffer.join("");
-
-          // Fast path: if chunk looks like JSON object or NDJSON, attempt parsing of last JSON
+          // Try to parse as JSON first
           try {
-            // If backend sends NDJSON, split by newline and parse last full line
-            const lines = joined.split(/\r?\n/).filter(Boolean);
-            const lastLine = lines[lines.length - 1];
-            if (lastLine && lastLine.trim().startsWith("{")) {
-              const parsed = JSON.parse(lastLine);
-              const replyPart = parsed?.reply;
-              if (typeof replyPart === "string") {
-                // replace accumulated with only the extracted reply
-                accumulated = replyPart;
+            if (chunk.trim().startsWith("{")) {
+              const parsed = JSON.parse(chunk);
+              if (parsed?.reply) {
+                accumulated = parsed.reply;
                 setMessages((prev) => {
                   const copy = [...prev];
                   copy[copy.length - 1] = { role: "assistant", content: accumulated };
@@ -96,10 +81,10 @@ export default function ChatBox() {
               }
             }
           } catch (e) {
-            // not valid JSON yet, fall back to treating as text
+            // Not JSON, treat as plain text
           }
 
-          // Fallback: treat chunk as plain text and append
+          // Plain text streaming
           accumulated += chunk;
           setMessages((prev) => {
             const copy = [...prev];
@@ -110,71 +95,98 @@ export default function ChatBox() {
       }
     } catch (err) {
       console.error(err);
-      setMessages((prev) => [...prev, { role: "assistant", content: "⚠️ Could not reach backend." }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: "Could not reach backend. Please try again." }]);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-  <div className="flex flex-col w-full max-w-full md:max-w-3xl mx-auto h-[60vh] sm:h-[66vh] md:h-[72vh]">
-      <div className="flex items-center justify-between mb-3">
-        {/* <div>
-          <h4 className="text-lg font-semibold">AI Mufti</h4>
-          <p className="text-xs text-muted-foreground">Live Q&A — Sunni Hanafi perspective</p>
-        </div> */}
-
-        <div className="text-xs text-muted-foreground">Status: {loading ? "Thinking…" : "Ready"}</div>
-      </div>
-
-  <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 glass-card rounded-lg">
-        {messages.length === 0 && (
-          <div className="text-center text-sm text-muted-foreground p-8">
-            Ask your first question — AI Mufti will reply thoughtfully and respectfully.
+    <div className="chat-container ">
+      {/* Chat Messages Area */}
+      <div className="chat-messages">
+        {messages.length === 0 ? (
+          <div className="chat-empty">
+            <div className="chat-empty-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5ZM12 19.2C9.5 19.2 7.29 17.92 6 15.98C6.03 13.99 10 12.9 12 12.9C13.99 12.9 17.97 13.99 18 15.98C16.71 17.92 14.5 19.2 12 19.2Z" fill="currentColor"/>
+              </svg>
+            </div>
+            <h3>How can I help you today?</h3>
+            <p>Ask any Islamic question and AI Mufti will provide guidance based on the Hanafi school of thought.</p>
+            <div className="chat-suggestions">
+              <button onClick={() => setInput("What are the five pillars of Islam?")}>What are the five pillars of Islam?</button>
+              <button onClick={() => setInput("Is Zakat obligatory?")}>Is Zakat obligatory?</button>
+              <button onClick={() => setInput("Can I pray Salat al-Janazah alone?")}>Can I pray Salat al-Janazah alone?</button>
+            </div>
           </div>
+        ) : (
+          messages.map((m, i) => (
+            <ChatMessage
+              key={i}
+              role={m.role}
+              content={m.content}
+              isLast={i === messages.length - 1}
+            />
+          ))
         )}
 
-        {messages.map((m, i) => (
-          <ChatMessage key={i} sender={m.role === "user" ? "user" : "ai"} message={m.content} />
-        ))}
-
-          {loading && <TypingIndicator />}
+        {/* Typing Indicator */}
+        {loading && (
+          <div className="chat-message assistant">
+            <div className="message-avatar">
+              <div className="avatar ai">AI</div>
+            </div>
+            <div className="message-bubble">
+              <div className="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
       </div>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          sendMessage();
-        }}
-        className="mt-3 flex flex-col sm:flex-row items-center gap-3"
-        aria-label="Send a question"
-      >
-        <label htmlFor="chat-input" className="sr-only">Type your question</label>
-        <textarea
-          id="chat-input"
-          aria-label="Type your question"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-            // Enter to send, Shift+Enter for newline
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              sendMessage();
-            }
+      {/* Sticky Input Area */}
+      <div className="chat-input-container">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            sendMessage();
           }}
-          rows={1}
-          className="w-full min-h-11 max-h-40 px-4 py-2 rounded-2xl border focus:outline-none focus:ring-2 focus:ring-green-300 resize-none text-sm"
-          placeholder="Type your question... "
-        />
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full disabled:opacity-60"
+          className="chat-input-form"
         >
-          {loading ? "Thinking…" : "Ask AI Mufti"}
-        </button>
-      </form>
+          <div className="chat-input-wrapper">
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
+              placeholder="Message AI Mufti..."
+              rows={1}
+              className="chat-input"
+              disabled={loading}
+            />
+            <button
+              type="submit"
+              disabled={loading || !input.trim()}
+              className="send-button"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="currentColor"/>
+              </svg>
+            </button>
+          </div>
+          <p className="input-footer">AI Mufti can make mistakes. Verify important information.</p>
+        </form>
+      </div>
     </div>
   );
 }
