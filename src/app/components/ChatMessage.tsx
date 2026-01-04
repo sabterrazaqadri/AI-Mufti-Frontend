@@ -6,9 +6,10 @@ interface ChatMessageProps {
   role: "user" | "assistant";
   content: string;
   isLast?: boolean;
+  isStreaming?: boolean;
 }
 
-export default function ChatMessage({ role, content, isLast }: ChatMessageProps) {
+export default function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
   const [copied, setCopied] = useState(false);
 
   const isUser = role === "user";
@@ -121,7 +122,17 @@ export default function ChatMessage({ role, content, isLast }: ChatMessageProps)
         )}
 
         {/* Message Content */}
-        <div className="message-content">{formatContent(content)}</div>
+        <div className="message-content">
+          {content ? (
+            formatContent(content)
+          ) : (
+            <div className="typing-indicator">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          )}
+        </div>
 
         {/* Copy Feedback */}
         {copied && <span className="copy-feedback">Copied!</span>}

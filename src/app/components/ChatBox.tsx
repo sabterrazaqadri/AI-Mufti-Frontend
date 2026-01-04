@@ -2,13 +2,20 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import ChatMessage from "./ChatMessage";
+import { useUser } from "@clerk/nextjs";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
 }
 
-export default function ChatBox() {
+interface ChatBoxProps {
+  currentChatId: string | null;
+  onChatIdChange: (chatId: string | null) => void;
+}
+
+export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps) {
+  const { user } = useUser();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,11 +23,37 @@ export default function ChatBox() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://digital-mufti-backend.onrender.com";
+  const userId = user?.id || "guest";
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+  }, [messages]);
+
+  // Load chat messages when chat_id changes
+  useEffect(() => {
+    if (currentChatId) {
+      loadChatMessages(currentChatId);
+    } else {
+      setMessages([]);
+    }
+  }, [currentChatId]);
+
+  const loadChatMessages = async (chatId: string) => {
+    try {
+      const res = await fetch(`${API_URL}/api/chats/${chatId}/messages?user_id=${userId}`);
+      if (res.ok) {
+        const data = await res.json();
+        const msgs = data.messages || [];
+        setMessages(msgs.map((m: any) => ({
+          role: m.role as "user" | "assistant",
+          content: m.content
+        })));
+      }
+    } catch (err) {
+      console.error("Failed to load messages:", err);
+    }
+  };
 
   const sendMessage = async () => {
     const text = input.trim();
@@ -32,85 +65,72 @@ export default function ChatBox() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/chat`, {
+      const res = await fetch(`${API_URL}/chat${currentChatId ? `/${currentChatId}` : ""}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: "web_user_001", content: text }),
+        body: JSON.stringify({ user_id: userId, content: text }),
       });
 
       if (!res.ok) throw new Error(res.statusText);
 
-      // Create placeholder for assistant message
+      // Check for new chat_id in headers
+      const xChatId = res.headers.get("X-Chat-Id");
+      if (xChatId && xChatId !== currentChatId) {
+        onChatIdChange(xChatId);
+      }
+
+      // Create empty assistant message placeholder
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
       const reader = res.body?.getReader();
       if (!reader) {
-        // Fallback: non-streaming response
-        const data = await res.json();
-        const replyText = typeof data === "string" ? data : data?.reply || JSON.stringify(data);
-        setMessages((prev) => {
-          const copy = [...prev];
-          copy[copy.length - 1] = { role: "assistant", content: replyText };
-          return copy;
-        });
-        return;
+        throw new Error("No reader available");
       }
 
       const decoder = new TextDecoder();
-      let done = false;
       let accumulated = "";
 
-      while (!done) {
-        const { value, done: readerDone } = await reader.read();
-        done = readerDone;
-        if (value) {
-          const chunk = decoder.decode(value, { stream: true });
+      // Read stream chunk by chunk
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-          // Try to parse as JSON first
-          try {
-            if (chunk.trim().startsWith("{")) {
-              const parsed = JSON.parse(chunk);
-              if (parsed?.reply) {
-                accumulated = parsed.reply;
-                setMessages((prev) => {
-                  const copy = [...prev];
-                  copy[copy.length - 1] = { role: "assistant", content: accumulated };
-                  return copy;
-                });
-                continue;
-              }
-            }
-          } catch (e) {
-            // Not JSON, treat as plain text
-          }
+        const chunk = decoder.decode(value, { stream: true });
+        accumulated += chunk;
 
-          // Plain text streaming
-          accumulated += chunk;
-          setMessages((prev) => {
-            const copy = [...prev];
-            copy[copy.length - 1] = { role: "assistant", content: accumulated };
-            return copy;
-          });
-        }
+        // Update the last message (assistant) with accumulated text
+        setMessages((prev) => {
+          const copy = [...prev];
+          copy[copy.length - 1] = { role: "assistant", content: accumulated };
+          return copy;
+        });
       }
     } catch (err) {
       console.error(err);
-      setMessages((prev) => [...prev, { role: "assistant", content: "Could not reach backend. Please try again." }]);
+      setMessages((prev) => {
+        const copy = [...prev];
+        copy[copy.length - 1] = { role: "assistant", content: "Could not reach backend. Please try again." };
+        return copy;
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="chat-container ">
+    <div className="chat-container">
       {/* Chat Messages Area */}
       <div className="chat-messages">
         {messages.length === 0 ? (
           <div className="chat-empty">
             <div className="chat-empty-icon">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5ZM12 19.2C9.5 19.2 7.29 17.92 6 15.98C6.03 13.99 10 12.9 12 12.9C13.99 12.9 17.97 13.99 18 15.98C16.71 17.92 14.5 19.2 12 19.2Z" fill="currentColor"/>
-              </svg>
+              <img
+                src="/AI-Mufti.png"
+                alt="AI Mufti"
+                width={48}
+                height={48}
+                className="w-12 h-12"
+              />
             </div>
             <h3>How can I help you today?</h3>
             <p>Ask any Islamic question and AI Mufti will provide guidance based on the Hanafi school of thought.</p>
@@ -126,26 +146,11 @@ export default function ChatBox() {
               key={i}
               role={m.role}
               content={m.content}
-              isLast={i === messages.length - 1}
+              isStreaming={loading && i === messages.length - 1 && m.role === "assistant" && !m.content}
             />
           ))
         )}
 
-        {/* Typing Indicator */}
-        {loading && (
-          <div className="chat-message assistant">
-            <div className="message-avatar">
-              <div className="avatar ai">AI</div>
-            </div>
-            <div className="message-bubble">
-              <div className="typing-indicator">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-            </div>
-          </div>
-        )}
         <div ref={messagesEndRef} />
       </div>
 
