@@ -12,6 +12,9 @@ const geistSans = Geist({
 export const metadata: Metadata = {
   title: "Digital Mufti — AI Islamic Scholar",
   description: "Ask authentic Sunni Hanafi fiqh questions and get sourced, respectful answers from the AI Mufti.",
+  icons: {
+    icon: "/AI-Mufti.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

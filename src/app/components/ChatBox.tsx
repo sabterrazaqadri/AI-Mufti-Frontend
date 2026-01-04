@@ -127,9 +127,9 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
               <img
                 src="/AI-Mufti.png"
                 alt="AI Mufti"
-                width={48}
-                height={48}
-                className="w-12 h-12"
+                width={60}
+                height={60}
+                className="w-16 h-16"
               />
             </div>
             <h3>How can I help you today?</h3>
