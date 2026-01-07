@@ -65,10 +65,10 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/chat${currentChatId ? `/${currentChatId}` : ""}`, {
+      const res = await fetch(`${API_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, content: text }),
+        body: JSON.stringify({ user_id: userId, content: text, chat_id: currentChatId }),
       });
 
       if (!res.ok) throw new Error(res.statusText);
