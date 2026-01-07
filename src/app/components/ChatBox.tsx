@@ -21,6 +21,7 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const skipNextLoadRef = useRef(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://digital-mufti-backend.onrender.com";
   const userId = user?.id || "guest";
@@ -32,6 +33,13 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
 
   // Load chat messages when chat_id changes
   useEffect(() => {
+    // When we create a new chat, we already have the messages in state.
+    // Avoid immediately reloading and wiping/replacing them.
+    if (skipNextLoadRef.current) {
+      skipNextLoadRef.current = false;
+      return;
+    }
+
     if (currentChatId) {
       loadChatMessages(currentChatId);
     } else {
@@ -76,6 +84,8 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
       // Check for new chat_id in headers
       const xChatId = res.headers.get("X-Chat-Id");
       if (xChatId && xChatId !== currentChatId) {
+        // We already have the latest messages locally; avoid a reload that can feel like a page refresh.
+        skipNextLoadRef.current = true;
         onChatIdChange(xChatId);
       }
 
