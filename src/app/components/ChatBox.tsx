@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import { useSession } from "../lib/auth-client";
 import ChatMessage from "./ChatMessage";
-import { useUser } from "@clerk/nextjs";
+import { chatApi, decodeSources, type ChatMessageDTO, type Source } from "../lib/api";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  sources?: Source[];
 }
 
 interface ChatBoxProps {
@@ -14,141 +16,174 @@ interface ChatBoxProps {
   onChatIdChange: (chatId: string | null) => void;
 }
 
+const SUGGESTIONS = [
+  "Wudu (ablution) ka sahih tareeqa kya hai?",
+  "Namaz mein surah Fatiha ke baad Ameen kaise kahein?",
+  "Is Zakat obligatory and on what wealth?",
+  "میلاد النبی ﷺ منانے کا کیا حکم ہے؟",
+];
+
 export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps) {
-  const { user } = useUser();
+  const { data: session } = useSession();
+  const isSignedIn = !!session?.user;
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const skipNextLoadRef = useRef(false);
-
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://digital-mufti-backend.onrender.com";
-  const userId = user?.id || "guest";
+  const abortRef = useRef<AbortController | null>(null);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Load chat messages when chat_id changes
+  // Auto-grow the textarea
   useEffect(() => {
-    // When we create a new chat, we already have the messages in state.
-    // Avoid immediately reloading and wiping/replacing them.
-    if (skipNextLoadRef.current) {
-      skipNextLoadRef.current = false;
-      return;
-    }
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+  }, [input]);
 
-    if (currentChatId) {
-      loadChatMessages(currentChatId);
-    } else {
-      setMessages([]);
-    }
-  }, [currentChatId]);
-
-  const loadChatMessages = async (chatId: string) => {
+  const loadChatMessages = useCallback(async (chatId: string) => {
     try {
-      const res = await fetch(`${API_URL}/api/chats/${chatId}/messages?user_id=${userId}`);
+      const res = await chatApi.messages(chatId);
       if (res.ok) {
         const data = await res.json();
-        const msgs = data.messages || [];
-        setMessages(msgs.map((m: any) => ({
-          role: m.role as "user" | "assistant",
-          content: m.content
-        })));
+        const msgs: ChatMessageDTO[] = data.messages || [];
+        setMessages(msgs.map((m) => ({ role: m.role, content: m.content })));
       }
     } catch (err) {
       console.error("Failed to load messages:", err);
     }
-  };
+  }, []);
 
-  const sendMessage = async () => {
-    const text = input.trim();
-    if (!text) return;
+  // Load chat messages when chat_id changes
+  useEffect(() => {
+    if (skipNextLoadRef.current) {
+      skipNextLoadRef.current = false;
+      return;
+    }
+    if (currentChatId) loadChatMessages(currentChatId);
+    else setMessages([]);
+  }, [currentChatId, loadChatMessages]);
 
-    const userMessage: Message = { role: "user", content: text };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-    setLoading(true);
+  const streamReply = useCallback(
+    async (text: string) => {
+      setLoading(true);
+      const controller = new AbortController();
+      abortRef.current = controller;
 
-    try {
-      const res = await fetch(`${API_URL}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, content: text, chat_id: currentChatId }),
-      });
+      try {
+        const res = await chatApi.send(
+          { content: text, chat_id: currentChatId },
+          controller.signal
+        );
+        if (!res.ok) throw new Error(res.statusText);
 
-      if (!res.ok) throw new Error(res.statusText);
+        const xChatId = res.headers.get("X-Chat-Id");
+        if (xChatId && xChatId !== currentChatId) {
+          skipNextLoadRef.current = true;
+          onChatIdChange(xChatId);
+        }
 
-      // Check for new chat_id in headers
-      const xChatId = res.headers.get("X-Chat-Id");
-      if (xChatId && xChatId !== currentChatId) {
-        // We already have the latest messages locally; avoid a reload that can feel like a page refresh.
-        skipNextLoadRef.current = true;
-        onChatIdChange(xChatId);
-      }
+        const sources = decodeSources(res.headers.get("X-Sources"));
+        setMessages((prev) => [...prev, { role: "assistant", content: "", sources }]);
 
-      // Create empty assistant message placeholder
-      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+        const reader = res.body?.getReader();
+        if (!reader) throw new Error("No reader available");
 
-      const reader = res.body?.getReader();
-      if (!reader) {
-        throw new Error("No reader available");
-      }
-
-      const decoder = new TextDecoder();
-      let accumulated = "";
-
-      // Read stream chunk by chunk
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        accumulated += chunk;
-
-        // Update the last message (assistant) with accumulated text
+        const decoder = new TextDecoder();
+        let accumulated = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          accumulated += decoder.decode(value, { stream: true });
+          setMessages((prev) => {
+            const copy = [...prev];
+            copy[copy.length - 1] = { role: "assistant", content: accumulated, sources };
+            return copy;
+          });
+        }
+      } catch (err) {
+        if ((err as Error).name === "AbortError") return; // user stopped; keep partial text
+        console.error(err);
         setMessages((prev) => {
           const copy = [...prev];
-          copy[copy.length - 1] = { role: "assistant", content: accumulated };
+          const last = copy[copy.length - 1];
+          if (last && last.role === "assistant" && !last.content) {
+            copy[copy.length - 1] = {
+              role: "assistant",
+              content:
+                "معذرت، بیک اینڈ تک رسائی نہ ہو سکی۔ / Could not reach the server. Please try again.",
+            };
+          }
           return copy;
         });
+      } finally {
+        setLoading(false);
+        abortRef.current = null;
       }
-    } catch (err) {
-      console.error(err);
-      setMessages((prev) => {
-        const copy = [...prev];
-        copy[copy.length - 1] = { role: "assistant", content: "Could not reach backend. Please try again." };
-        return copy;
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [currentChatId, onChatIdChange]
+  );
+
+  const sendMessage = useCallback(() => {
+    const text = input.trim();
+    if (!text || loading) return;
+    setMessages((prev) => [...prev, { role: "user", content: text }]);
+    setInput("");
+    streamReply(text);
+  }, [input, loading, streamReply]);
+
+  const stopGenerating = useCallback(() => {
+    abortRef.current?.abort();
+  }, []);
+
+  const regenerate = useCallback(() => {
+    if (loading) return;
+    // find the last user message
+    const lastUser = [...messages].reverse().find((m) => m.role === "user");
+    if (!lastUser) return;
+    setMessages((prev) => {
+      const copy = [...prev];
+      if (copy[copy.length - 1]?.role === "assistant") copy.pop();
+      return copy;
+    });
+    streamReply(lastUser.content);
+  }, [loading, messages, streamReply]);
+
+  const showRegenerate =
+    !loading && messages.length > 0 && messages[messages.length - 1].role === "assistant";
 
   return (
     <div className="chat-container">
-      {/* Chat Messages Area */}
       <div className="chat-messages">
         {messages.length === 0 ? (
           <div className="chat-empty">
             <div className="chat-empty-icon">
-              <img
-                src="/AI-Mufti.png"
-                alt="AI Mufti"
-                width={60}
-                height={60}
-                className="w-16 h-16"
-              />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/AI-Mufti.png" alt="AI Mufti" width={48} height={48} />
             </div>
-            <h3>How can I help you today?</h3>
-            <p>Ask any Islamic question and AI Mufti will provide guidance based on the Hanafi school of thought.</p>
+            <h3>Assalamu Alaikum 👋</h3>
+            <p>
+              Ask any Islamic question. AI Mufti answers according to the Sunni Hanafi
+              Ahl-e-Sunnat (Barelvi) school, with references to authentic sources such as
+              Fatawa Razvia and Bahar-e-Shariat.
+            </p>
             <div className="chat-suggestions">
-              <button onClick={() => setInput("What are the five pillars of Islam?")}>What are the five pillars of Islam?</button>
-              <button onClick={() => setInput("Is Zakat obligatory?")}>Is Zakat obligatory?</button>
-              <button onClick={() => setInput("Can I pray Salat al-Janazah alone?")}>Can I pray Salat al-Janazah alone?</button>
+              {SUGGESTIONS.map((s) => (
+                <button key={s} type="button" onClick={() => setInput(s)} dir="auto">
+                  {s}
+                </button>
+              ))}
             </div>
+            <p className="chat-empty-note">
+              AI Mufti is an assistant and can make mistakes. For important rulings, confirm
+              with a qualified mufti or Dar al-Ifta.
+            </p>
           </div>
         ) : (
           messages.map((m, i) => (
@@ -156,16 +191,37 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
               key={i}
               role={m.role}
               content={m.content}
-              isStreaming={loading && i === messages.length - 1 && m.role === "assistant" && !m.content}
+              sources={m.sources}
+              isStreaming={
+                loading && i === messages.length - 1 && m.role === "assistant" && !m.content
+              }
             />
           ))
         )}
-
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Sticky Input Area */}
       <div className="chat-input-container">
+        <div className="chat-input-actions">
+          {loading && (
+            <button type="button" className="pill-button" onClick={stopGenerating}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="6" width="12" height="12" rx="2" />
+              </svg>
+              Stop
+            </button>
+          )}
+          {showRegenerate && (
+            <button type="button" className="pill-button" onClick={regenerate}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 4v6h-6M1 20v-6h6" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+              </svg>
+              Regenerate
+            </button>
+          )}
+        </div>
+
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -184,22 +240,28 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
                   sendMessage();
                 }
               }}
-              placeholder="Message AI Mufti..."
+              placeholder="Message AI Mufti…"
               rows={1}
               className="chat-input"
-              disabled={loading}
+              dir="auto"
+              aria-label="Message AI Mufti"
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
               className="send-button"
+              aria-label="Send message"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="currentColor"/>
+                <path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="currentColor" />
               </svg>
             </button>
           </div>
-          <p className="input-footer">AI Mufti can make mistakes. Verify important information.</p>
+          <p className="input-footer">
+            {isSignedIn
+              ? "AI Mufti can make mistakes. Verify important rulings with a qualified mufti."
+              : "Sign in to save your chats. AI Mufti can make mistakes — verify important rulings."}
+          </p>
         </form>
       </div>
     </div>

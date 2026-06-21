@@ -1,32 +1,75 @@
-import type { Metadata } from "next";
-import { Geist } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
+import type { Metadata, Viewport } from "next";
+import { Geist, Noto_Nastaliq_Urdu } from "next/font/google";
 import { ToastProvider } from "./components/ToastProvider";
+import { ConfirmProvider } from "./components/ConfirmProvider";
 import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
+const notoUrdu = Noto_Nastaliq_Urdu({
+  variable: "--font-urdu",
+  subsets: ["arabic"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+const SITE_URL = "https://digitalmufti.vercel.app";
+
 export const metadata: Metadata = {
-  title: "Digital Mufti — AI Islamic Scholar",
-  description: "Ask authentic Sunni Hanafi fiqh questions and get sourced, respectful answers from the AI Mufti.",
-  icons: {
-    icon: "/AI-Mufti.png",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "AI Mufti — Hanafi (Barelvi) Islamic Q&A",
+    template: "%s · AI Mufti",
   },
+  description:
+    "Ask authentic Islamic questions and get clear, sourced answers based on the Sunni Hanafi Ahl-e-Sunnat (Barelvi) school — referencing Fatawa Razvia, Bahar-e-Shariat and classical Hanafi works. Answers in Urdu, Roman Urdu, English or Arabic.",
+  keywords: [
+    "AI Mufti", "Islamic Q&A", "Hanafi fiqh", "Barelvi", "Ahl-e-Sunnat",
+    "Fatawa Razvia", "Bahar-e-Shariat", "Islamic chatbot", "masail", "fatwa",
+  ],
+  applicationName: "AI Mufti",
+  authors: [{ name: "Sabter Raza Qadri" }],
+  icons: { icon: "/AI-Mufti.png", apple: "/AI-Mufti.png" },
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    title: "AI Mufti — Hanafi (Barelvi) Islamic Q&A",
+    description:
+      "Clear, sourced answers based on the Sunni Hanafi Ahl-e-Sunnat (Barelvi) school of thought.",
+    siteName: "AI Mufti",
+    images: [{ url: "/AI-Mufti.png", width: 512, height: 512, alt: "AI Mufti" }],
+  },
+  twitter: {
+    card: "summary",
+    title: "AI Mufti — Hanafi (Barelvi) Islamic Q&A",
+    description:
+      "Clear, sourced answers based on the Sunni Hanafi Ahl-e-Sunnat (Barelvi) school.",
+    images: ["/AI-Mufti.png"],
+  },
+  robots: { index: true, follow: true },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#16a34a" },
+    { media: "(prefers-color-scheme: dark)", color: "#07120b" },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
-      <html lang="en" className={geistSans.variable}>
-        <body>
-          <ToastProvider>
-            <main>{children}</main>
-          </ToastProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" className={`${geistSans.variable} ${notoUrdu.variable}`}>
+      <body>
+        <ToastProvider>
+          <ConfirmProvider>{children}</ConfirmProvider>
+        </ToastProvider>
+      </body>
+    </html>
   );
 }

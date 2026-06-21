@@ -1,25 +1,25 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { getSessionCookie } from "better-auth/cookies";
 
-const isProtectedRoute = createRouteMatcher([
-  '/chat(.*)',
-  '/api/chat(.*)',
-]);
+// The home/chat page is open to guests (stateless). Real authorization is
+// enforced by the FastAPI backend, which verifies the Better Auth JWT.
+// Add paths here if you later want to gate them at the edge.
+const PROTECTED_PREFIXES: string[] = [];
 
-export default clerkMiddleware((auth, req) => {
-  if (isProtectedRoute(req)) {
-    auth().then(authObj => {
-      if (!authObj.userId) {
-        return authObj.redirectToSignIn();
-      }
-    });
+export function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+  const needsAuth = PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
+  if (!needsAuth) return NextResponse.next();
+
+  const session = getSessionCookie(req);
+  if (!session) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/";
+    return NextResponse.redirect(url);
   }
-});
+  return NextResponse.next();
+}
 
 export const config = {
-  matcher: [
-    // Skip Next.js internals and all static files
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
-    '/(api|trpc)(.*)',
-  ],
+  matcher: ["/((?!_next|api/auth|.*\\..*).*)"],
 };

@@ -1,22 +1,26 @@
 "use client";
 
 import React, { useState } from "react";
+import type { Source } from "../lib/api";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
   content: string;
-  isLast?: boolean;
+  sources?: Source[];
   isStreaming?: boolean;
 }
 
-export default function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
-  const [copied, setCopied] = useState(false);
+// Detect Arabic / Urdu script so we can switch to RTL + the Nastaliq font.
+const RTL_RE = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/;
+const isRtl = (text: string) => RTL_RE.test(text);
 
+export default function ChatMessage({ role, content, sources }: ChatMessageProps) {
+  const [copied, setCopied] = useState(false);
   const isUser = role === "user";
+  const rtl = isRtl(content);
 
   const handleCopy = async () => {
     if (!content) return;
-
     try {
       await navigator.clipboard.writeText(content);
       setCopied(true);
@@ -26,69 +30,47 @@ export default function ChatMessage({ role, content, isStreaming }: ChatMessageP
     }
   };
 
-  // Format content preserving line breaks and structure
   const formatContent = (text: string) => {
     if (!text) return null;
-
-    // Split by double newlines to get paragraphs
     const paragraphs = text.split(/\n\n+/);
 
     return paragraphs.map((paragraph, pIndex) => {
-      // Check if this is a numbered list (1., 2., etc.)
-      const lines = paragraph.split("\n");
-      const isNumberedList = lines.every(
-        (line) => /^\d+[.)]\s/.test(line.trim()) || /^[\u06F0-\u06F9]\s/.test(line.trim())
-      );
+      const lines = paragraph.split("\n").filter((l) => l.length > 0);
+      if (lines.length === 0) return null;
 
-      // Check if this is a bullet list
-      const isBulletList = lines.every(
-        (line) =>
-          /^[•\-\*]\s/.test(line.trim()) || /^[\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652]\s/.test(line.trim())
-      );
+      const isNumbered = lines.every((line) => /^\s*\d+[.)]\s/.test(line));
+      const isBullet = lines.every((line) => /^\s*[•\-*]\s/.test(line));
 
-      if (isNumberedList || isBulletList) {
+      if (isNumbered || isBullet) {
         return (
-          <ul key={pIndex} className="message-list">
+          <ul key={pIndex} className={`message-list ${isNumbered ? "numbered" : "bullet"}`}>
             {lines.map((line, i) => (
-              <li key={i}>{line.replace(/^[•\-\*\d+.)\s]+/, "").trim()}</li>
+              <li key={i}>{line.replace(/^\s*(?:\d+[.)]|[•\-*])\s/, "").trim()}</li>
             ))}
           </ul>
         );
       }
 
-      // Regular paragraph with possible inline lists
-      const formattedLines = lines.map((line, lineIndex) => {
-        // Handle inline numbered points like "1. Text"
-        const inlineNumbered = line.split(/(\d+[.)]\s)/);
-        if (inlineNumbered.length > 1) {
-          return (
-            <span key={lineIndex}>
-              {inlineNumbered.map((part, i) =>
-                /^\d+[.)]\s/.test(part) ? (
-                  <span key={i} className="inline-number">{part}</span>
-                ) : (
-                  <span key={i}>{part}</span>
-                )
-              )}
-              <br />
-            </span>
-          );
-        }
-        return <span key={lineIndex}>{line}<br /></span>;
-      });
-
-      return <p key={pIndex}>{formattedLines}</p>;
+      return (
+        <p key={pIndex}>
+          {lines.map((line, i) => (
+            <React.Fragment key={i}>
+              {line}
+              {i < lines.length - 1 && <br />}
+            </React.Fragment>
+          ))}
+        </p>
+      );
     });
   };
 
   return (
     <div className={`chat-message ${isUser ? "user" : "assistant"}`}>
-      {/* Avatar */}
       <div className="message-avatar">
         <div className={`avatar ${isUser ? "user" : "ai"}`}>
           {isUser ? (
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/>
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor" />
             </svg>
           ) : (
             "AI"
@@ -96,9 +78,7 @@ export default function ChatMessage({ role, content, isStreaming }: ChatMessageP
         </div>
       </div>
 
-      {/* Message Bubble */}
       <div className="message-bubble">
-        {/* Role Label & Copy Button for Assistant */}
         {!isUser && (
           <div className="message-header">
             <span className="role-label">AI Mufti</span>
@@ -106,27 +86,26 @@ export default function ChatMessage({ role, content, isStreaming }: ChatMessageP
               onClick={handleCopy}
               className="copy-button"
               title="Copy to clipboard"
-              aria-label="Copy message"
+              aria-label={copied ? "Copied" : "Copy message"}
             >
               {copied ? (
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17Z" fill="currentColor"/>
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17Z" fill="currentColor" />
                 </svg>
               ) : (
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M16 1H4C2.9 1 2 1.9 2 3v14h2V3h12V1zm3 4H8C6.9 5 6 5.9 6 7v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/>
+                  <path d="M16 1H4C2.9 1 2 1.9 2 3v14h2V3h12V1zm3 4H8C6.9 5 6 5.9 6 7v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor" />
                 </svg>
               )}
             </button>
           </div>
         )}
 
-        {/* Message Content */}
-        <div className="message-content">
+        <div className={`message-content ${rtl ? "rtl" : ""}`} dir={rtl ? "rtl" : "auto"}>
           {content ? (
             formatContent(content)
           ) : (
-            <div className="typing-indicator">
+            <div className="typing-indicator" aria-label="AI Mufti is typing">
               <span></span>
               <span></span>
               <span></span>
@@ -134,7 +113,35 @@ export default function ChatMessage({ role, content, isStreaming }: ChatMessageP
           )}
         </div>
 
-        {/* Copy Feedback */}
+        {!isUser && sources && sources.length > 0 && (
+          <details className="sources-panel">
+            <summary>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+              </svg>
+              {sources.length} source{sources.length > 1 ? "s" : ""}
+            </summary>
+            <ol className="sources-list">
+              {sources.map((s, i) => {
+                const rtlSrc = isRtl(s.content);
+                return (
+                  <li key={i} className="source-card">
+                    <div className="source-title">{s.title}</div>
+                    {s.reference && <div className="source-ref">{s.reference}</div>}
+                    <div
+                      className={`source-content ${rtlSrc ? "rtl" : ""}`}
+                      dir={rtlSrc ? "rtl" : "auto"}
+                    >
+                      {s.content}
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          </details>
+        )}
+
         {copied && <span className="copy-feedback">Copied!</span>}
       </div>
     </div>

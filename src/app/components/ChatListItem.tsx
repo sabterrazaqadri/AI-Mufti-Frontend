@@ -1,15 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useUser } from "@clerk/nextjs";
-
-interface Chat {
-  id: string;
-  user_id: string;
-  title: string;
-  created_at: string;
-  updated_at: string;
-}
+import { chatApi, type Chat } from "../lib/api";
 
 interface ChatListItemProps {
   chat: Chat;
@@ -19,13 +11,9 @@ interface ChatListItemProps {
 }
 
 export default function ChatListItem({ chat, isActive, onSelect, onDelete }: ChatListItemProps) {
-  const { user } = useUser();
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(chat.title);
-
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://digital-mufti-backend.onrender.com";
-  const userId = user?.id || "guest";
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -58,11 +46,7 @@ export default function ChatListItem({ chat, isActive, onSelect, onDelete }: Cha
   const saveTitle = async () => {
     if (editTitle.trim() && editTitle !== chat.title) {
       try {
-        await fetch(`${API_URL}/api/chats/${chat.id}/title`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id: userId, title: editTitle.trim() }),
-        });
+        await chatApi.rename(chat.id, editTitle.trim());
       } catch (error) {
         console.error("Failed to update title:", error);
       }

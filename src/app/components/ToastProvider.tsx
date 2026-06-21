@@ -80,7 +80,7 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
   return (
     <ToastContext.Provider value={{ toasts, addToast, removeToast }}>
       {children}
-      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[1000] flex flex-col items-center gap-3 pointer-events-none">
+      <div className="fixed bottom-4 right-4 z-[1100] flex flex-col items-end gap-3 pointer-events-none">
         <AnimatePresence>
           {toasts.map((toast) => (
             <div key={toast.id}>

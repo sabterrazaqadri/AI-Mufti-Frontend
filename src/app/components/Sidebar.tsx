@@ -1,17 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { UserButton, SignInButton, useUser } from "@clerk/nextjs";
+import React, { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
+import { useSession, signOut } from "../lib/auth-client";
 import { useToast } from "./ToastProvider";
+import { useConfirm } from "./ConfirmProvider";
+import AuthModal from "./AuthModal";
 import ChatListItem from "./ChatListItem";
-
-interface Chat {
-  id: string;
-  user_id: string;
-  title: string;
-  created_at: string;
-  updated_at: string;
-}
+import { chatApi, type Chat } from "../lib/api";
 
 interface SidebarProps {
   onSelectChat: (chatId: string | null) => void;
@@ -19,29 +15,20 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ onSelectChat, currentChatId }: SidebarProps) {
-  const { user, isLoaded } = useUser();
+  const { data: session, isPending } = useSession();
+  const user = session?.user ?? null;
+  const isLoaded = !isPending;
   const { addToast } = useToast();
+  const confirm = useConfirm();
   const [chats, setChats] = useState<Chat[]>([]);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingChat, setIsCreatingChat] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://digital-mufti-backend.onrender.com";
-
-  const userId = user?.id || "guest";
-
-  // Fetch chats when user is loaded
-  useEffect(() => {
-    if (isLoaded && user) {
-      fetchChats();
-    } else if (isLoaded && !user) {
-      setIsLoading(false);
-    }
-  }, [isLoaded, user, currentChatId]); // Refetch when currentChatId changes to see new titles
-
-  const fetchChats = async () => {
+  const fetchChats = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/api/chats?user_id=${userId}`);
+      const res = await chatApi.list();
       if (res.ok) {
         const data = await res.json();
         setChats(data.chats || []);
@@ -51,20 +38,24 @@ export default function Sidebar({ onSelectChat, currentChatId }: SidebarProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  // Fetch chats when user is loaded / a new chat appears
+  useEffect(() => {
+    if (isLoaded && user) {
+      fetchChats();
+    } else if (isLoaded && !user) {
+      setChats([]);
+      setIsLoading(false);
+    }
+  }, [isLoaded, user, currentChatId, fetchChats]);
 
   const createNewChat = async () => {
     setIsCreatingChat(true);
     try {
-      const res = await fetch(`${API_URL}/api/chats`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, title: "New Chat" }),
-      });
-
+      const res = await chatApi.create();
       if (res.ok) {
         const newChat = await res.json();
-        // Add to local state and select it
         setChats((prev) => [newChat, ...prev]);
         onSelectChat(newChat.id);
       }
@@ -76,51 +67,35 @@ export default function Sidebar({ onSelectChat, currentChatId }: SidebarProps) {
   };
 
   const deleteChat = async (chatId: string) => {
-    // Show confirmation toast
-    addToast({
+    const ok = await confirm({
       title: "Delete chat?",
-      description: "This action cannot be undone.",
-      type: "destructive",
-      duration: 0, // Don't auto-dismiss
-      action: {
-        label: "Delete",
-        onClick: async () => {
-          try {
-            const res = await fetch(`${API_URL}/api/chats/${chatId}?user_id=${userId}`, {
-              method: "DELETE",
-            });
-
-            if (res.ok) {
-              // Optimistically remove from local state
-              setChats((prev) => prev.filter((chat) => chat.id !== chatId));
-              // If deleted chat was selected, clear selection
-              if (currentChatId === chatId) {
-                onSelectChat(null);
-              }
-              // Show success message
-              addToast({
-                title: "Chat deleted",
-                description: "The chat has been permanently removed.",
-                type: "success"
-              });
-            } else {
-              throw new Error(`Failed to delete chat: ${res.status}`);
-            }
-          } catch (error) {
-            console.error("Failed to delete chat:", error);
-            addToast({
-              title: "Delete failed",
-              description: "Could not delete the chat. Please try again.",
-              type: "error"
-            });
-          }
-        }
-      },
-      cancel: {
-        label: "Cancel",
-        onClick: () => {} // Do nothing on cancel
-      }
+      description: "This conversation will be permanently removed. This action cannot be undone.",
+      confirmLabel: "Delete",
+      destructive: true,
     });
+    if (!ok) return;
+
+    try {
+      const res = await chatApi.remove(chatId);
+      if (res.ok) {
+        setChats((prev) => prev.filter((chat) => chat.id !== chatId));
+        if (currentChatId === chatId) onSelectChat(null);
+        addToast({
+          title: "Chat deleted",
+          description: "The chat has been permanently removed.",
+          type: "success",
+        });
+      } else {
+        throw new Error(`Failed to delete chat: ${res.status}`);
+      }
+    } catch (error) {
+      console.error("Failed to delete chat:", error);
+      addToast({
+        title: "Delete failed",
+        description: "Could not delete the chat. Please try again.",
+        type: "error",
+      });
+    }
   };
 
   const selectChat = (chatId: string) => {
@@ -201,30 +176,39 @@ export default function Sidebar({ onSelectChat, currentChatId }: SidebarProps) {
             <div className="user-menu">
               <div className="user-info">
                 <div className="user-avatar">
-                  {user.imageUrl ? (
-                    <img src={user.imageUrl} alt={user.fullName || "User"} />
+                  {user.image ? (
+                    <Image src={user.image} alt={user.name || "User"} width={32} height={32} />
                   ) : (
-                    <span>{user.firstName?.[0] || "U"}</span>
+                    <span>{(user.name || user.email || "U").charAt(0).toUpperCase()}</span>
                   )}
                 </div>
-                <span className="user-name">
-                  {user.fullName || user.firstName || "User"}
-                </span>
+                <span className="user-name">{user.name || user.email || "User"}</span>
               </div>
-              <UserButton afterSignOutUrl="/" />
+              <button
+                className="sign-out-btn"
+                onClick={() => signOut()}
+                title="Sign out"
+                aria-label="Sign out"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+              </button>
             </div>
           ) : (
-            <SignInButton mode="modal">
-              <button className="sign-in-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M15 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H15M10 17L15 12M15 12L10 7M15 12H3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span>Sign In</span>
-              </button>
-            </SignInButton>
+            <button className="sign-in-btn" onClick={() => setShowAuth(true)}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H15M10 17L15 12M15 12L10 7M15 12H3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Sign In</span>
+            </button>
           )}
         </div>
       </aside>
+
+      <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
     </>
   );
 }
