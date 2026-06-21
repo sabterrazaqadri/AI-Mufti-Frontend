@@ -257,6 +257,18 @@ body {
 .message-list li { margin-bottom: 6px; }
 .message-list li:last-child { margin-bottom: 0; }
 
+/* 404 page */
+.notfound { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.notfound-card { text-align: center; max-width: 420px; }
+.notfound-code { font-size: 4rem; font-weight: 800; color: var(--accent); letter-spacing: -2px; }
+.notfound-title { margin: 8px 0; font-size: 1.5rem; font-weight: 700; color: var(--text); }
+.notfound-text { color: var(--text-secondary); margin: 0 0 24px; line-height: 1.6; }
+.notfound-btn {
+  display: inline-block; padding: 11px 22px; border-radius: 12px; background: var(--accent);
+  color: #fff; font-weight: 600; text-decoration: none; transition: background 0.18s ease;
+}
+.notfound-btn:hover { background: var(--accent-strong); }
+
 /* ============================================================
    CONFIRM DIALOG (modal)
    ============================================================ */
