@@ -19,8 +19,8 @@ export default function Header() {
           <span className="app-header-tagline">Islamic guidance, clearly sourced</span>
         </div>
       </div>
-      <span className="maslak-badge" title="Sunni Hanafi, Ahl-e-Sunnat wa Jama'at (Barelvi)">
-        Hanafi · Ahl-e-Sunnat (Barelvi)
+      <span className="maslak-badge" title="Sunni Hanafi, Ahl-e-Sunnat wa Jama'at">
+        Hanafi · Ahl-e-Sunnat wa Jama&apos;at
       </span>
     </header>
   );

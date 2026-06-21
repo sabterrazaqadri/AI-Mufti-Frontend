@@ -170,7 +170,7 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
             <h3>Assalamu Alaikum 👋</h3>
             <p>
               Ask any Islamic question. AI Mufti answers according to the Sunni Hanafi
-              Ahl-e-Sunnat (Barelvi) school, with references to authentic sources such as
+              Ahl-e-Sunnat wa Jama&apos;at school, with references to authentic sources such as
               Fatawa Razvia and Bahar-e-Shariat.
             </p>
             <div className="chat-suggestions">

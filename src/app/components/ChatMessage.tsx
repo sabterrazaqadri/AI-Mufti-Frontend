@@ -10,9 +10,17 @@ interface ChatMessageProps {
   isStreaming?: boolean;
 }
 
-// Detect Arabic / Urdu script so we can switch to RTL + the Nastaliq font.
-const RTL_RE = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/;
-const isRtl = (text: string) => RTL_RE.test(text);
+// Arabic / Urdu script range (global, for counting).
+const RTL_CHARS = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/g;
+const LATIN_CHARS = /[A-Za-z]/g;
+
+// A message is RTL only if Arabic/Urdu letters DOMINATE — so a Roman-Urdu answer
+// that merely contains "وعلیکم السلام" stays left-to-right (numbers on the left).
+const isRtl = (text: string) => {
+  const rtl = (text.match(RTL_CHARS) || []).length;
+  const ltr = (text.match(LATIN_CHARS) || []).length;
+  return rtl > ltr;
+};
 
 export default function ChatMessage({ role, content, sources }: ChatMessageProps) {
   const [copied, setCopied] = useState(false);
@@ -30,35 +38,35 @@ export default function ChatMessage({ role, content, sources }: ChatMessageProps
     }
   };
 
+  // Preserve the model's OWN numbering (1, 2, 3, …) as literal text instead of
+  // re-numbering with CSS — CSS counters restart per list and showed "1" each time.
+  // Lines that start with a number or bullet get a hanging-indent marker.
   const formatContent = (text: string) => {
     if (!text) return null;
-    const paragraphs = text.split(/\n\n+/);
+    const paragraphs = text.split(/\n{2,}/).filter((p) => p.trim().length > 0);
 
     return paragraphs.map((paragraph, pIndex) => {
-      const lines = paragraph.split("\n").filter((l) => l.length > 0);
-      if (lines.length === 0) return null;
-
-      const isNumbered = lines.every((line) => /^\s*\d+[.)]\s/.test(line));
-      const isBullet = lines.every((line) => /^\s*[•\-*]\s/.test(line));
-
-      if (isNumbered || isBullet) {
-        return (
-          <ul key={pIndex} className={`message-list ${isNumbered ? "numbered" : "bullet"}`}>
-            {lines.map((line, i) => (
-              <li key={i}>{line.replace(/^\s*(?:\d+[.)]|[•\-*])\s/, "").trim()}</li>
-            ))}
-          </ul>
-        );
-      }
+      const lines = paragraph.split("\n").filter((l) => l.trim().length > 0);
 
       return (
-        <p key={pIndex}>
-          {lines.map((line, i) => (
-            <React.Fragment key={i}>
-              {line}
-              {i < lines.length - 1 && <br />}
-            </React.Fragment>
-          ))}
+        <p key={pIndex} dir="auto">
+          {lines.map((line, i) => {
+            const marker = line.match(/^\s*(\d+[.)]|[•\-*])\s+/);
+            if (marker) {
+              return (
+                <span key={i} className="msg-line">
+                  <span className="msg-marker">{marker[1]}</span>
+                  <span className="msg-text">{line.slice(marker[0].length)}</span>
+                </span>
+              );
+            }
+            return (
+              <React.Fragment key={i}>
+                {line}
+                {i < lines.length - 1 && <br />}
+              </React.Fragment>
+            );
+          })}
         </p>
       );
     });

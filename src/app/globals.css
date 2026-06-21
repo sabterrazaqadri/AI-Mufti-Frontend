@@ -250,6 +250,14 @@ body {
 .message-content p { margin: 0 0 12px; }
 .message-content p:last-child { margin-bottom: 0; }
 
+/* Numbered / bulleted lines: marker keeps the model's own number and sits on the
+   start side (left for LTR, right for RTL) thanks to dir="auto" on the paragraph. */
+.msg-line { display: flex; gap: 8px; align-items: baseline; margin-bottom: 4px; }
+.msg-line:last-child { margin-bottom: 0; }
+.msg-marker { flex-shrink: 0; min-width: 1.4em; font-weight: 700; color: var(--accent); }
+.msg-text { flex: 1; min-width: 0; }
+.chat-message.user .msg-marker { color: rgba(255, 255, 255, 0.92); }
+
 .message-list { margin: 0 0 12px; padding-left: 22px; }
 .message-list.numbered { list-style-type: decimal; }
 .message-list.bullet { list-style-type: disc; }

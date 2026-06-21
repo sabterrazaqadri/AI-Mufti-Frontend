@@ -22,11 +22,11 @@ const SITE_URL = "https://digitalmufti.vercel.app";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "AI Mufti — Hanafi (Barelvi) Islamic Q&A",
+    default: "AI Mufti — Hanafi Ahl-e-Sunnat wa Jama'at Islamic Q&A",
     template: "%s · AI Mufti",
   },
   description:
-    "Ask authentic Islamic questions and get clear, sourced answers based on the Sunni Hanafi Ahl-e-Sunnat (Barelvi) school — referencing Fatawa Razvia, Bahar-e-Shariat and classical Hanafi works. Answers in Urdu, Roman Urdu, English or Arabic.",
+    "Ask authentic Islamic questions and get clear, sourced answers based on the Sunni Hanafi Ahl-e-Sunnat wa Jama'at school — referencing Fatawa Razvia, Bahar-e-Shariat and classical Hanafi works. Answers in Urdu, Roman Urdu, English or Arabic.",
   keywords: [
     "AI Mufti", "Islamic Q&A", "Hanafi fiqh", "Barelvi", "Ahl-e-Sunnat",
     "Fatawa Razvia", "Bahar-e-Shariat", "Islamic chatbot", "masail", "fatwa",
@@ -37,17 +37,17 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: SITE_URL,
-    title: "AI Mufti — Hanafi (Barelvi) Islamic Q&A",
+    title: "AI Mufti — Hanafi Ahl-e-Sunnat wa Jama'at Islamic Q&A",
     description:
-      "Clear, sourced answers based on the Sunni Hanafi Ahl-e-Sunnat (Barelvi) school of thought.",
+      "Clear, sourced answers based on the Sunni Hanafi Ahl-e-Sunnat wa Jama'at school of thought.",
     siteName: "AI Mufti",
     images: [{ url: "/AI-Mufti.png", width: 512, height: 512, alt: "AI Mufti" }],
   },
   twitter: {
     card: "summary",
-    title: "AI Mufti — Hanafi (Barelvi) Islamic Q&A",
+    title: "AI Mufti — Hanafi Ahl-e-Sunnat wa Jama'at Islamic Q&A",
     description:
-      "Clear, sourced answers based on the Sunni Hanafi Ahl-e-Sunnat (Barelvi) school.",
+      "Clear, sourced answers based on the Sunni Hanafi Ahl-e-Sunnat wa Jama'at school.",
     images: ["/AI-Mufti.png"],
   },
   robots: { index: true, follow: true },
