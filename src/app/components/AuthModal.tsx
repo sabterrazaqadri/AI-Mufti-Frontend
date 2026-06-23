@@ -7,11 +7,15 @@ import { signIn, signUp } from "../lib/auth-client";
 interface AuthModalProps {
   open: boolean;
   onClose: () => void;
+  /** Called after a successful sign in / sign up (before onClose). */
+  onSuccess?: () => void;
+  title?: string;
+  description?: string;
 }
 
 type Mode = "signin" | "signup";
 
-export default function AuthModal({ open, onClose }: AuthModalProps) {
+export default function AuthModal({ open, onClose, onSuccess, title, description }: AuthModalProps) {
   const [mode, setMode] = useState<Mode>("signin");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -36,6 +40,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
         const { error } = await signIn.email({ email, password });
         if (error) throw new Error(error.message || "Sign in failed");
       }
+      onSuccess?.();
       onClose();
     } catch (err) {
       setError((err as Error).message);
@@ -67,11 +72,13 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
             onClick={(e) => e.stopPropagation()}
           >
             <h2 id="auth-title" className="dialog-title">
-              {mode === "signin" ? "Sign in to AI Mufti" : "Create your account"}
+              {mode === "signin"
+                ? title || "Sign in to AI Mufti"
+                : "Create your account"}
             </h2>
             <p className="dialog-desc">
               {mode === "signin"
-                ? "Sign in to save and revisit your conversations."
+                ? description || "Sign in to save and revisit your conversations."
                 : "Create an account to keep your chat history."}
             </p>
 

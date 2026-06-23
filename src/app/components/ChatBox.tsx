@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useSession } from "../lib/auth-client";
 import ChatMessage from "./ChatMessage";
+import AuthModal from "./AuthModal";
 import { chatApi, decodeSources, type ChatMessageDTO, type Source } from "../lib/api";
 
 interface Message {
@@ -33,6 +34,8 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const skipNextLoadRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
+  const [showAuth, setShowAuth] = useState(false);
+  const pendingTextRef = useRef<string | null>(null);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -81,7 +84,18 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
           { content: text, chat_id: currentChatId },
           controller.signal
         );
-        if (!res.ok) throw new Error(res.statusText);
+        if (!res.ok) {
+          // Surface a clear, status-specific message instead of throwing a bare
+          // error (which only showed up as a noisy dev overlay).
+          const msg =
+            res.status === 429
+              ? "بہت زیادہ درخواستیں۔ براہِ کرم ایک منٹ بعد دوبارہ کوشش کریں۔ / Too many requests — please wait a minute and try again."
+              : res.status === 401
+              ? "آپ کا سیشن ختم ہو گیا۔ براہِ کرم دوبارہ سائن اِن کریں۔ / Your session expired — please sign in again."
+              : "معذرت، اس وقت جواب نہیں مل سکا۔ تھوڑی دیر بعد دوبارہ کوشش کریں۔ / Sorry, the server could not respond right now. Please try again.";
+          setMessages((prev) => [...prev, { role: "assistant", content: msg }]);
+          return;
+        }
 
         const xChatId = res.headers.get("X-Chat-Id");
         if (xChatId && xChatId !== currentChatId) {
@@ -133,10 +147,27 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
   const sendMessage = useCallback(() => {
     const text = input.trim();
     if (!text || loading) return;
+    // Require sign-in before the first message can be sent. Keep the typed text,
+    // open the auth modal, and send it automatically once the user is in.
+    if (!isSignedIn) {
+      pendingTextRef.current = text;
+      setShowAuth(true);
+      return;
+    }
     setMessages((prev) => [...prev, { role: "user", content: text }]);
     setInput("");
     streamReply(text);
-  }, [input, loading, streamReply]);
+  }, [input, loading, isSignedIn, streamReply]);
+
+  // After a successful sign in / sign up, send the message the guest was trying to send.
+  const handleAuthSuccess = useCallback(() => {
+    const pending = pendingTextRef.current;
+    pendingTextRef.current = null;
+    if (!pending) return;
+    setMessages((prev) => [...prev, { role: "user", content: pending }]);
+    setInput("");
+    streamReply(pending);
+  }, [streamReply]);
 
   const stopGenerating = useCallback(() => {
     abortRef.current?.abort();
@@ -264,6 +295,14 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
           </p>
         </form>
       </div>
+
+      <AuthModal
+        open={showAuth}
+        onClose={() => setShowAuth(false)}
+        onSuccess={handleAuthSuccess}
+        title="Sign in to send your message"
+        description="Create a free account or sign in to chat with AI Mufti and keep your conversation history."
+      />
     </div>
   );
 }

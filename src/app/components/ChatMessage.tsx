@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { Source } from "../lib/api";
 
 interface ChatMessageProps {
@@ -22,6 +24,20 @@ const isRtl = (text: string) => {
   return rtl > ltr;
 };
 
+// Render text as GitHub-flavoured Markdown so headings, bold, lists, tables and
+// blockquotes show the way the model intends them. Links open safely and wide
+// tables can scroll on small screens.
+const MD_COMPONENTS = {
+  a: (props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a {...props} target="_blank" rel="noopener noreferrer" />
+  ),
+  table: (props: React.TableHTMLAttributes<HTMLTableElement>) => (
+    <div className="md-table-wrap">
+      <table {...props} />
+    </div>
+  ),
+};
+
 export default function ChatMessage({ role, content, sources }: ChatMessageProps) {
   const [copied, setCopied] = useState(false);
   const isUser = role === "user";
@@ -36,40 +52,6 @@ export default function ChatMessage({ role, content, sources }: ChatMessageProps
     } catch (err) {
       console.error("Failed to copy:", err);
     }
-  };
-
-  // Preserve the model's OWN numbering (1, 2, 3, …) as literal text instead of
-  // re-numbering with CSS — CSS counters restart per list and showed "1" each time.
-  // Lines that start with a number or bullet get a hanging-indent marker.
-  const formatContent = (text: string) => {
-    if (!text) return null;
-    const paragraphs = text.split(/\n{2,}/).filter((p) => p.trim().length > 0);
-
-    return paragraphs.map((paragraph, pIndex) => {
-      const lines = paragraph.split("\n").filter((l) => l.trim().length > 0);
-
-      return (
-        <p key={pIndex} dir="auto">
-          {lines.map((line, i) => {
-            const marker = line.match(/^\s*(\d+[.)]|[•\-*])\s+/);
-            if (marker) {
-              return (
-                <span key={i} className="msg-line">
-                  <span className="msg-marker">{marker[1]}</span>
-                  <span className="msg-text">{line.slice(marker[0].length)}</span>
-                </span>
-              );
-            }
-            return (
-              <React.Fragment key={i}>
-                {line}
-                {i < lines.length - 1 && <br />}
-              </React.Fragment>
-            );
-          })}
-        </p>
-      );
-    });
   };
 
   return (
@@ -109,9 +91,11 @@ export default function ChatMessage({ role, content, sources }: ChatMessageProps
           </div>
         )}
 
-        <div className={`message-content ${rtl ? "rtl" : ""}`} dir={rtl ? "rtl" : "auto"}>
+        <div className={`message-content markdown ${rtl ? "rtl" : ""}`} dir={rtl ? "rtl" : "auto"}>
           {content ? (
-            formatContent(content)
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
+              {content}
+            </ReactMarkdown>
           ) : (
             <div className="typing-indicator" aria-label="AI Mufti is typing">
               <span></span>

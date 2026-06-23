@@ -3,6 +3,23 @@ import { jwt, bearer } from "better-auth/plugins";
 import { Pool } from "pg";
 
 /**
+ * Strip the `sslmode` / `channel_binding` query params from the connection
+ * string. We set TLS explicitly via the `ssl` option below, and leaving
+ * `sslmode=require` in the URL makes pg emit a noisy deprecation warning.
+ */
+function cleanDbUrl(url?: string): string | undefined {
+  if (!url) return url;
+  try {
+    const u = new URL(url);
+    u.searchParams.delete("sslmode");
+    u.searchParams.delete("channel_binding");
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
+/**
  * Better Auth server instance.
  *
  * - Users/sessions live in the same Neon Postgres database.
@@ -12,7 +29,7 @@ import { Pool } from "pg";
  */
 export const auth = betterAuth({
   database: new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: cleanDbUrl(process.env.DATABASE_URL),
     ssl: { rejectUnauthorized: false },
   }),
   secret: process.env.BETTER_AUTH_SECRET,

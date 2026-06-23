@@ -250,20 +250,72 @@ body {
 .message-content p { margin: 0 0 12px; }
 .message-content p:last-child { margin-bottom: 0; }
 
-/* Numbered / bulleted lines: marker keeps the model's own number and sits on the
-   start side (left for LTR, right for RTL) thanks to dir="auto" on the paragraph. */
-.msg-line { display: flex; gap: 8px; align-items: baseline; margin-bottom: 4px; }
-.msg-line:last-child { margin-bottom: 0; }
-.msg-marker { flex-shrink: 0; min-width: 1.4em; font-weight: 700; color: var(--accent); }
-.msg-text { flex: 1; min-width: 0; }
-.chat-message.user .msg-marker { color: rgba(255, 255, 255, 0.92); }
+/* ── Markdown rendering (Claude-style structure) ───────────────────────── */
+.markdown > :first-child { margin-top: 0; }
+.markdown > :last-child { margin-bottom: 0; }
 
-.message-list { margin: 0 0 12px; padding-left: 22px; }
-.message-list.numbered { list-style-type: decimal; }
-.message-list.bullet { list-style-type: disc; }
-.message-content.rtl .message-list { padding-left: 0; padding-right: 22px; }
-.message-list li { margin-bottom: 6px; }
-.message-list li:last-child { margin-bottom: 0; }
+.markdown h1, .markdown h2, .markdown h3, .markdown h4 {
+  font-weight: 700; line-height: 1.3; color: var(--text);
+  margin: 18px 0 8px;
+}
+.markdown h1 { font-size: 1.25rem; }
+.markdown h2 { font-size: 1.12rem; }
+.markdown h3 { font-size: 1.02rem; }
+.markdown h4 { font-size: 0.96rem; }
+.chat-message.user .markdown h1,
+.chat-message.user .markdown h2,
+.chat-message.user .markdown h3,
+.chat-message.user .markdown h4 { color: #fff; }
+
+.markdown strong { font-weight: 700; }
+.markdown em { font-style: italic; color: var(--text-secondary); }
+.chat-message.user .markdown em { color: rgba(255, 255, 255, 0.85); }
+
+.markdown a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+
+/* Lists — native ordered numbering (1, 2, 3 …) with markers on the start side. */
+.markdown ul, .markdown ol { margin: 8px 0 12px; padding-inline-start: 1.5em; }
+.markdown li { margin-bottom: 6px; }
+.markdown li:last-child { margin-bottom: 0; }
+.markdown li::marker { color: var(--accent); font-weight: 600; }
+.chat-message.user .markdown li::marker { color: rgba(255, 255, 255, 0.92); }
+.markdown li > ul, .markdown li > ol { margin: 6px 0; }
+
+/* Blockquote — used for Qur'an / Hadith / citation text. */
+.markdown blockquote {
+  margin: 10px 0; padding: 8px 14px;
+  border-inline-start: 3px solid var(--accent);
+  background: var(--surface-2, rgba(127, 127, 127, 0.08));
+  border-radius: 6px; color: var(--text);
+}
+.markdown blockquote p:last-child { margin-bottom: 0; }
+
+/* Inline code + fenced blocks. */
+.markdown code {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.86em; padding: 1px 5px; border-radius: 4px;
+  background: var(--surface-2, rgba(127, 127, 127, 0.12));
+}
+.markdown pre {
+  margin: 10px 0; padding: 12px 14px; overflow-x: auto;
+  background: var(--surface-2, rgba(127, 127, 127, 0.12)); border-radius: 8px;
+}
+.markdown pre code { padding: 0; background: none; font-size: 0.84em; }
+
+/* Tables — for comparisons (e.g. fard vs sunnat, multiple views). */
+.md-table-wrap { overflow-x: auto; margin: 10px 0; }
+.markdown table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+.markdown th, .markdown td {
+  border: 1px solid var(--border, rgba(127, 127, 127, 0.25));
+  padding: 7px 10px; text-align: start;
+}
+.markdown th { background: var(--surface-2, rgba(127, 127, 127, 0.1)); font-weight: 700; }
+
+.markdown hr { border: none; border-top: 1px solid var(--border, rgba(127, 127, 127, 0.25)); margin: 16px 0; }
+
+/* RTL: lists indent from the right; tables/markers follow the start side. */
+.message-content.rtl .markdown ul,
+.message-content.rtl .markdown ol { padding-inline-start: 1.5em; }
 
 /* 404 page */
 .notfound { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
