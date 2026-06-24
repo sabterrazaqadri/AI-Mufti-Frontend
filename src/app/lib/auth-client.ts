@@ -3,7 +3,12 @@
 import { createAuthClient } from "better-auth/react";
 
 // baseURL defaults to the current origin in the browser.
-export const authClient = createAuthClient();
+// refetchOnWindowFocus is disabled so the session isn't re-fetched every time the
+// tab regains focus (it defaults to true, which spams /api/auth/get-session as you
+// switch windows). Session is still fetched on mount and after auth actions.
+export const authClient = createAuthClient({
+  sessionOptions: { refetchOnWindowFocus: false },
+});
 
 export const { signIn, signUp, signOut, useSession } = authClient;
 

@@ -20,8 +20,8 @@ interface ChatBoxProps {
 const SUGGESTIONS = [
   "Wudu (ablution) ka sahih tareeqa kya hai?",
   "Namaz mein surah Fatiha ke baad Ameen kaise kahein?",
-  "Is Zakat obligatory and on what wealth?",
-  "میلاد النبی ﷺ منانے کا کیا حکم ہے؟",
+  "مسافر کے احکام کیا ہیں؟",
+  "سجدۂ سہو کب واجب ہوتا ہے؟",
 ];
 
 export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps) {
@@ -222,7 +222,6 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
               key={i}
               role={m.role}
               content={m.content}
-              sources={m.sources}
               isStreaming={
                 loading && i === messages.length - 1 && m.role === "assistant" && !m.content
               }

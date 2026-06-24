@@ -3,12 +3,10 @@
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import type { Source } from "../lib/api";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
   content: string;
-  sources?: Source[];
   isStreaming?: boolean;
 }
 
@@ -38,7 +36,7 @@ const MD_COMPONENTS = {
   ),
 };
 
-export default function ChatMessage({ role, content, sources }: ChatMessageProps) {
+export default function ChatMessage({ role, content }: ChatMessageProps) {
   const [copied, setCopied] = useState(false);
   const isUser = role === "user";
   const rtl = isRtl(content);
@@ -104,35 +102,6 @@ export default function ChatMessage({ role, content, sources }: ChatMessageProps
             </div>
           )}
         </div>
-
-        {!isUser && sources && sources.length > 0 && (
-          <details className="sources-panel">
-            <summary>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-              </svg>
-              {sources.length} source{sources.length > 1 ? "s" : ""}
-            </summary>
-            <ol className="sources-list">
-              {sources.map((s, i) => {
-                const rtlSrc = isRtl(s.content);
-                return (
-                  <li key={i} className="source-card">
-                    <div className="source-title">{s.title}</div>
-                    {s.reference && <div className="source-ref">{s.reference}</div>}
-                    <div
-                      className={`source-content ${rtlSrc ? "rtl" : ""}`}
-                      dir={rtlSrc ? "rtl" : "auto"}
-                    >
-                      {s.content}
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
-          </details>
-        )}
 
         {copied && <span className="copy-feedback">Copied!</span>}
       </div>
