@@ -1048,6 +1048,231 @@ fieldset { border: 0; padding: 0; margin: 0; }
 .source-link:hover { text-decoration: underline; }
 .source-link svg { width: 14px; height: 14px; }
 
+/* ── Verify with a mufti ────────────────────────────────── */
+/* WhatsApp green, not the brand green — this button leaves the app and hands
+   the exchange to a human, and should look like the thing it opens. */
+.verify-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px 16px;
+  min-height: 44px;
+  border-radius: 999px;
+  background: #25d366;
+  color: #06301a;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: filter 180ms ease, transform 180ms ease;
+}
+.verify-button:hover { filter: brightness(1.06); }
+.verify-button:active { transform: translateY(1px); }
+.verify-button svg { width: 19px; height: 19px; flex-shrink: 0; }
+.verify-button > span {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.verify-button .urdu { font-size: 0.82rem; font-weight: 500; opacity: 0.82; }
+
+/* ── Library: volumes ───────────────────────────────────── */
+.jild-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
+}
+.jild-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 26px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--brass);
+  border-radius: var(--r-md);
+  text-decoration: none;
+  color: var(--text);
+  transition: border-color 200ms ease, transform 200ms ease;
+}
+.jild-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+.jild-label {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.jild-label .urdu { font-size: 0.8rem; letter-spacing: normal; text-transform: none; }
+.jild-num {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 2.4rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--accent-strong);
+}
+.jild-meta { font-size: 0.78rem; color: var(--text-secondary); }
+
+/* ── Library: page index ────────────────────────────────── */
+.page-index {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.page-index-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 16px;
+  min-height: 56px;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  text-decoration: none;
+  color: var(--text);
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+.page-index-row:hover { background: var(--surface); border-color: var(--border); }
+.page-index-num {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  min-width: 62px;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--brass);
+}
+.page-index-num small {
+  font-family: var(--font-sans), sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.page-index-heading {
+  flex: 1;
+  min-width: 0;
+  font-size: 1rem;
+  line-height: 1.9;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Library: the folio (original page reader) ──────────── */
+/* The deepest view in the product: an actual page of the book, set to be read.
+   Parchment ground, generous measure, nothing competing with the text. */
+.page-reader { max-width: 820px; }
+
+.folio {
+  padding: 44px 48px 48px;
+  background: var(--parchment);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+}
+.folio-head {
+  margin-bottom: 30px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+.folio-book {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--brass);
+}
+.folio-title {
+  margin: 14px 0 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 2;
+}
+
+.folio-body { font-size: 1.12rem; }
+.folio-block + .folio-block {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px dashed color-mix(in srgb, var(--brass) 30%, transparent);
+}
+.folio-ref {
+  margin: 0 0 8px;
+  font-family: var(--font-sans), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--brass);
+  text-align: left;
+}
+.folio-text {
+  margin: 0;
+  line-height: 2.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── Prose pages (about) ────────────────────────────────── */
+.page-prose { max-width: 760px; }
+.prose-section { margin-bottom: 44px; }
+.prose-section h2 {
+  margin: 0 0 14px;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 1.85rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.prose-section p,
+.prose-section li {
+  font-size: 1.02rem;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+.prose-section p { margin: 0 0 16px; }
+.prose-section strong { color: var(--text); }
+.prose-section a { color: var(--accent-strong); }
+.prose-section ul,
+.prose-section ol { margin: 0 0 16px; padding-left: 22px; }
+.prose-section li { margin-bottom: 10px; }
+
+.prose-steps { list-style: none; padding: 0; counter-reset: step; }
+.prose-steps li {
+  position: relative;
+  padding-left: 46px;
+  margin-bottom: 18px;
+  counter-increment: step;
+}
+.prose-steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: -2px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--brass-soft);
+  color: var(--brass);
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
 /* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 900px) {
   .proof-inner { grid-template-columns: repeat(2, 1fr); }
@@ -1075,4 +1300,9 @@ fieldset { border: 0; padding: 0; margin: 0; }
   .cal-grid { gap: 4px; }
   .site-footer-credit { white-space: normal; }
   .pager .btn { padding: 11px 14px; }
+  .folio { padding: 26px 20px 30px; border-radius: var(--r-md); }
+  .folio-body { font-size: 1.06rem; }
+  .page-index-row { gap: 12px; padding: 10px 12px; }
+  .page-index-num { min-width: 52px; font-size: 1.1rem; }
+  .verify-button { width: 100%; justify-content: center; }
 }

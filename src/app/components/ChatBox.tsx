@@ -221,6 +221,9 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
               role={m.role}
               content={m.content}
               sources={m.sources}
+              // The preceding user turn — what the mufti needs to see alongside
+              // the answer when it is sent on for verification.
+              question={m.role === "assistant" ? messages[i - 1]?.content : undefined}
               isStreaming={
                 loading && i === messages.length - 1 && m.role === "assistant" && !m.content
               }

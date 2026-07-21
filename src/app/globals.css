@@ -65,11 +65,27 @@ body {
   border-radius: 6px;
 }
 
-/* Urdu / Arabic text uses Nastaliq */
+/* ── Urdu / Arabic typography ──────────────────────────────
+   Nastaliq is a steeply-sloped script: glyphs descend far below the baseline
+   and stack diagonally, so it needs much more leading than Latin text and
+   must never be condensed, italicised or synthetically bolded. */
 [dir="rtl"], .rtl {
   font-family: var(--font-urdu), var(--font-sans), serif;
-  line-height: 2.2;
+  line-height: 2.35;
+  /* Nastaliq resolves at larger sizes; at Latin body size it turns to mush. */
+  font-size: 1.06em;
+  /* Kashida justification would stretch joins the font already shapes. */
+  text-align: right;
+  font-synthesis: none;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  text-rendering: optimizeLegibility;
 }
+[dir="rtl"] em, [dir="rtl"] i, .rtl em, .rtl i { font-style: normal; }
+
+/* Descenders collide with the line below in tight blocks. */
+[dir="rtl"] p, [dir="rtl"] li, .rtl p, .rtl li { margin-block: 0.65em; }
+[dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3,
+.rtl h1, .rtl h2, .rtl h3 { line-height: 2; font-weight: 600; }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 10px; }

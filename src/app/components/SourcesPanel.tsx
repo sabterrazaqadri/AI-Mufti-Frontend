@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { Source } from "../lib/api";
+import { sourceHref, type Source } from "../lib/api";
 
 /**
  * The citations behind an answer. This is the product's central claim made
@@ -33,22 +33,27 @@ export default function SourcesPanel({ sources }: { sources?: Source[] }) {
       </summary>
 
       <ol className="sources-list">
-        {sources.map((s, i) => (
-          <li key={`${s.reference ?? s.title}-${i}`} className="source-item">
-            <p className="source-ref">{s.reference || s.title}</p>
-            <blockquote className="source-quote urdu" dir="rtl" lang="ur">
-              {s.content}
-            </blockquote>
-            {s.slug && (
-              <Link href={`/library/${s.slug}`} className="source-link">
-                Open {s.title || "this book"} in the library
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M5 12h14M13 6l6 6-6 6" />
-                </svg>
-              </Link>
-            )}
-          </li>
-        ))}
+        {sources.map((s, i) => {
+          const href = sourceHref(s);
+          const exact = s.jild != null && s.page != null;
+          return (
+            <li key={`${s.reference ?? s.title}-${i}`} className="source-item">
+              <p className="source-ref">{s.reference || s.title}</p>
+              <blockquote className="source-quote urdu" dir="rtl" lang="ur">
+                {s.content}
+              </blockquote>
+              {href && (
+                <Link href={href} className="source-link">
+                  {/* The whole point: not "about this book" but the page itself. */}
+                  {exact ? "Read the original page" : `Open ${s.title || "this book"}`}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </Link>
+              )}
+            </li>
+          );
+        })}
       </ol>
     </details>
   );

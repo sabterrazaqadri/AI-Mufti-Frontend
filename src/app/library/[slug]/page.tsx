@@ -8,52 +8,31 @@ import { libraryApi } from "../../lib/api";
 export const revalidate = 3600;
 
 type Params = Promise<{ slug: string }>;
-type Search = Promise<{ page?: string }>;
 
-function pageNum(v?: string) {
-  const n = Number(v);
-  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 1;
-}
+const nf = (n: number) => new Intl.NumberFormat("en-US").format(n);
 
-export async function generateMetadata({
-  params,
-  searchParams,
-}: {
-  params: Params;
-  searchParams: Search;
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;
-  const page = pageNum((await searchParams).page);
-  const book = await libraryApi.book(slug, page);
+  const book = await libraryApi.book(slug);
   if (!book) return { title: "Book not found" };
 
-  const suffix = page > 1 ? ` — Page ${page}` : "";
+  const volumes = book.jilds.length > 1 ? `${book.jilds.length} volumes, ` : "";
+  // Must match the on-page wording: books scraped by section have no printed
+  // page numbers, and the description should not claim otherwise.
+  const unit = book.has_safha ? "pages" : "sections";
   return {
-    title: `${book.name}${suffix}`,
-    description: `Read ${book.name} passage by passage — ${book.total} excerpts with volume and page references, as used by AI Mufti to answer Hanafi Ahl-e-Sunnat masail.`,
-    alternates: { canonical: `/library/${slug}${page > 1 ? `?page=${page}` : ""}` },
+    title: book.name,
+    description: `Read ${book.name} in full — ${volumes}${nf(book.total_pages)} ${unit}, ${nf(book.total_passages)} passages. One of the authentic Ahl-e-Sunnat works AI Mufti answers from.`,
+    alternates: { canonical: `/library/${slug}` },
   };
 }
 
-/** Strip the "[Book، جلد N — heading]" prefix the ingester prepends to each chunk. */
-function cleanContent(text: string) {
-  return text.replace(/^\[[^\]]*\]\s*/, "").trim();
-}
-
-export default async function BookPage({
-  params,
-  searchParams,
-}: {
-  params: Params;
-  searchParams: Search;
-}) {
+export default async function BookPage({ params }: { params: Params }) {
   const { slug } = await params;
-  const page = pageNum((await searchParams).page);
-  const book = await libraryApi.book(slug, page);
+  const book = await libraryApi.book(slug);
   if (!book) notFound();
 
-  const prev = page > 1 ? page - 1 : null;
-  const next = page < book.pages ? page + 1 : null;
+  const unit = book.has_safha ? "pages" : "sections";
 
   return (
     <>
@@ -68,49 +47,30 @@ export default async function BookPage({
         <div className="page-head">
           <h1>{book.name}</h1>
           <p>
-            {new Intl.NumberFormat("en-US").format(book.total)} passages · page {page} of{" "}
-            {book.pages}
+            {book.jilds.length > 1 ? `${book.jilds.length} volumes · ` : ""}
+            {nf(book.total_pages)} {unit} · {nf(book.total_passages)} passages
           </p>
         </div>
 
-        <div className="passages">
-          {book.passages.map((p, i) => (
-            <article key={`${p.reference}-${i}`} className="passage">
-              {p.reference && <p className="passage-ref">{p.reference}</p>}
-              {p.title && (
-                <h2 className="passage-title" dir="auto">
-                  {p.title}
-                </h2>
-              )}
-              <div className="passage-body urdu" dir="rtl" lang="ur">
-                {cleanContent(p.content)}
-              </div>
-            </article>
+        <div className="jild-grid">
+          {book.jilds.map((j) => (
+            <Link key={j.jild} href={`/library/${slug}/${j.jild}`} className="jild-card">
+              <span className="jild-label">
+                Jild
+                <span className="urdu" dir="rtl">
+                  جلد
+                </span>
+              </span>
+              <span className="jild-num">{j.jild}</span>
+              <span className="jild-meta">
+                {nf(j.pages)} {unit}
+              </span>
+            </Link>
           ))}
         </div>
 
-        <nav className="pager" aria-label="Pagination">
-          {prev ? (
-            <Link href={`/library/${slug}?page=${prev}`} className="btn btn-ghost" rel="prev">
-              ← Previous
-            </Link>
-          ) : (
-            <span />
-          )}
-          <span className="pager-status">
-            {page} / {book.pages}
-          </span>
-          {next ? (
-            <Link href={`/library/${slug}?page=${next}`} className="btn btn-ghost" rel="next">
-              Next →
-            </Link>
-          ) : (
-            <span />
-          )}
-        </nav>
-
         <div className="page-cta">
-          <p>Have a question about what you just read?</p>
+          <p>Have a question about what this book covers?</p>
           <Link href="/chat" className="btn btn-primary">
             Ask AI Mufti
           </Link>

@@ -15,8 +15,10 @@ export interface Source {
   title: string;
   reference?: string;
   content: string;
-  /** Book tag — links the citation to its /library/<slug> page. */
+  /** Book tag, volume and page — deep-link a citation to the exact original page. */
   slug?: string;
+  jild?: number | null;
+  page?: number | null;
   score?: number;
 }
 
@@ -63,50 +65,82 @@ export interface LibraryPassage {
   content: string;
 }
 
-export interface LibraryBookPage {
+export interface LibraryJild {
+  jild: number;
+  pages: number;
+  passages: number;
+}
+
+export interface LibraryBookDetail {
   slug: string;
   name: string;
-  total: number;
+  /** False for books scraped by section, which carry no printed page number. */
+  has_safha: boolean;
+  jilds: LibraryJild[];
+  total_pages: number;
+  total_passages: number;
+}
+
+export interface LibraryJildDetail {
+  slug: string;
+  name: string;
+  has_safha: boolean;
+  jild: number;
+  pages: { page: number; heading: string | null; passages: number }[];
+}
+
+export interface LibraryPageDetail {
+  slug: string;
+  name: string;
+  jild: number;
   page: number;
-  per_page: number;
-  pages: number;
+  heading: string | null;
   passages: LibraryPassage[];
+  prev: number | null;
+  next: number | null;
 }
 
 /**
  * Library reads are public and unauthenticated, so they can run on the server for
  * SEO. Revalidated hourly — the corpus only changes when a new book is ingested.
+ *
+ * None of these throw: they run during the production build, and a sleeping or
+ * briefly unreachable backend must degrade to an empty shelf, not fail the deploy.
  */
+async function getJson<T>(path: string): Promise<T | null> {
+  try {
+    const res = await fetch(`${API_URL}${path}`, { next: { revalidate: 3600 } });
+    if (!res.ok) return null;
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
 export const libraryApi = {
   books: async (): Promise<LibraryBook[]> => {
-    // Never throw: these run during the production build, and a sleeping or
-    // briefly unreachable backend must degrade to an empty shelf, not fail
-    // the whole deploy.
-    try {
-      const res = await fetch(`${API_URL}/api/library/books`, {
-        next: { revalidate: 3600 },
-      });
-      if (!res.ok) return [];
-      const data = await res.json();
-      return data.books ?? [];
-    } catch {
-      return [];
-    }
+    const data = await getJson<{ books: LibraryBook[] }>("/api/library/books");
+    return data?.books ?? [];
   },
 
-  book: async (slug: string, page = 1): Promise<LibraryBookPage | null> => {
-    try {
-      const res = await fetch(
-        `${API_URL}/api/library/books/${encodeURIComponent(slug)}?page=${page}`,
-        { next: { revalidate: 3600 } }
-      );
-      if (!res.ok) return null;
-      return await res.json();
-    } catch {
-      return null;
-    }
-  },
+  book: (slug: string) =>
+    getJson<LibraryBookDetail>(`/api/library/books/${encodeURIComponent(slug)}`),
+
+  jild: (slug: string, jild: number) =>
+    getJson<LibraryJildDetail>(`/api/library/books/${encodeURIComponent(slug)}/${jild}`),
+
+  page: (slug: string, jild: number, page: number) =>
+    getJson<LibraryPageDetail>(
+      `/api/library/books/${encodeURIComponent(slug)}/${jild}/${page}`
+    ),
 };
+
+/** Path to the original page a citation came from, when we know it precisely. */
+export function sourceHref(s: Source): string | null {
+  if (!s.slug) return null;
+  if (s.jild == null || s.page == null) return `/library/${s.slug}`;
+  return `/library/${s.slug}/${s.jild}/${s.page}`;
+}
 
 export const chatApi = {
   list: () => apiFetch("/api/chats"),

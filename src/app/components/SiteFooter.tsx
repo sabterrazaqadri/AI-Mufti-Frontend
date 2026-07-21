@@ -6,6 +6,7 @@ const COLUMNS = [
     links: [
       { href: "/chat", label: "Ask a Mufti" },
       { href: "/library", label: "Library" },
+      { href: "/about", label: "About & Maslak" },
     ],
   },
   {
