@@ -970,6 +970,84 @@ fieldset { border: 0; padding: 0; margin: 0; }
 }
 .zakat-verdict { margin: 0; font-size: 0.84rem; line-height: 1.6; color: var(--text-secondary); }
 
+/* ── Chat: sources panel ────────────────────────────────── */
+/* Brass again, and for the same reason it is used everywhere else: this block
+   is provenance. Collapsed by default so it never competes with the answer. */
+.sources {
+  margin-top: 14px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--brass);
+  border-radius: var(--r-md);
+  background: var(--brass-soft);
+  overflow: hidden;
+}
+.sources summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 14px;
+  min-height: 44px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--brass);
+  cursor: pointer;
+  list-style: none;
+}
+.sources summary::-webkit-details-marker { display: none; }
+.sources summary > svg { width: 16px; height: 16px; flex-shrink: 0; }
+.sources summary > span {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  flex: 1;
+}
+.sources summary .urdu { font-size: 0.8rem; font-weight: 400; opacity: 0.85; }
+.sources-chevron { transition: transform 220ms ease; }
+.sources[open] .sources-chevron { transform: rotate(180deg); }
+
+.sources-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.source-item {
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+.source-ref {
+  margin: 0 0 8px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--brass);
+}
+.source-quote {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 0.95rem;
+  line-height: 2.2;
+  color: var(--text-secondary);
+}
+.source-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  min-height: 32px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent-strong);
+  text-decoration: none;
+}
+.source-link:hover { text-decoration: underline; }
+.source-link svg { width: 14px; height: 14px; }
+
 /* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 900px) {
   .proof-inner { grid-template-columns: repeat(2, 1fr); }

@@ -55,7 +55,15 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
       if (res.ok) {
         const data = await res.json();
         const msgs: ChatMessageDTO[] = data.messages || [];
-        setMessages(msgs.map((m) => ({ role: m.role, content: m.content })));
+        // Carry the stored citations back so a reopened chat still shows the
+        // books its rulings came from.
+        setMessages(
+          msgs.map((m) => ({
+            role: m.role,
+            content: m.content,
+            sources: m.sources ?? undefined,
+          }))
+        );
       }
     } catch (err) {
       console.error("Failed to load messages:", err);
@@ -212,6 +220,7 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
               key={i}
               role={m.role}
               content={m.content}
+              sources={m.sources}
               isStreaming={
                 loading && i === messages.length - 1 && m.role === "assistant" && !m.content
               }

@@ -3,10 +3,13 @@
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import SourcesPanel from "./SourcesPanel";
+import type { Source } from "../lib/api";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
   content: string;
+  sources?: Source[];
   isStreaming?: boolean;
 }
 
@@ -36,7 +39,7 @@ const MD_COMPONENTS = {
   ),
 };
 
-export default function ChatMessage({ role, content }: ChatMessageProps) {
+export default function ChatMessage({ role, content, sources }: ChatMessageProps) {
   const [copied, setCopied] = useState(false);
   const isUser = role === "user";
   const rtl = isRtl(content);
@@ -102,6 +105,10 @@ export default function ChatMessage({ role, content }: ChatMessageProps) {
             </div>
           )}
         </div>
+
+        {/* Only once the answer has actually streamed in — citations appearing
+            above an empty bubble reads as if they are the reply. */}
+        {!isUser && content && <SourcesPanel sources={sources} />}
 
         {copied && <span className="copy-feedback">Copied!</span>}
       </div>

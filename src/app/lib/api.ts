@@ -11,16 +11,19 @@ export interface Chat {
   updated_at: string;
 }
 
-export interface ChatMessageDTO {
-  role: "user" | "assistant";
-  content: string;
-}
-
 export interface Source {
   title: string;
   reference?: string;
   content: string;
+  /** Book tag — links the citation to its /library/<slug> page. */
+  slug?: string;
   score?: number;
+}
+
+export interface ChatMessageDTO {
+  role: "user" | "assistant";
+  content: string;
+  sources?: Source[] | null;
 }
 
 /** Decode the base64(JSON) X-Sources header into citation cards (UTF-8 safe). */
