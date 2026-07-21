@@ -104,8 +104,12 @@ export default async function LandingPage() {
               بِسْمِ اللہِ الرَّحْمٰنِ الرَّحِیْمِ
             </p>
 
+            {/* Name and promise in one heading: the brand line names the thing,
+                the sentence says what it does. Both stay inside the h1 so the
+                key phrase and the name are indexed together. */}
             <h1 className="hero-title">
-              Islamic guidance from the
+              <span className="hero-title-brand">Digital Mufti</span>
+              Your Islamic AI guide from the
               <span className="hero-title-accent"> Qur&apos;an and Hadith.</span>
             </h1>
 
