@@ -1,12 +1,23 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Noto_Nastaliq_Urdu } from "next/font/google";
+import { Geist, Noto_Nastaliq_Urdu, Cormorant_Garamond } from "next/font/google";
 import { ToastProvider } from "./components/ToastProvider";
 import { ConfirmProvider } from "./components/ConfirmProvider";
 import "./globals.css";
+// Loaded after globals so the site/marketing layer can build on its tokens.
+import "./site.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
+});
+
+// Display serif for headings — the scholarly register the product is going for.
+// Body copy stays on the sans for legibility at small sizes.
+const cormorant = Cormorant_Garamond({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -64,7 +75,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${notoUrdu.variable}`}>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${cormorant.variable} ${notoUrdu.variable}`}
+    >
       <body>
         <ToastProvider>
           <ConfirmProvider>{children}</ConfirmProvider>

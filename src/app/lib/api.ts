@@ -48,6 +48,63 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
   return fetch(`${API_URL}${path}`, { ...init, headers });
 }
 
+export interface LibraryBook {
+  slug: string;
+  name: string;
+  passages: number;
+}
+
+export interface LibraryPassage {
+  title: string;
+  reference?: string;
+  content: string;
+}
+
+export interface LibraryBookPage {
+  slug: string;
+  name: string;
+  total: number;
+  page: number;
+  per_page: number;
+  pages: number;
+  passages: LibraryPassage[];
+}
+
+/**
+ * Library reads are public and unauthenticated, so they can run on the server for
+ * SEO. Revalidated hourly — the corpus only changes when a new book is ingested.
+ */
+export const libraryApi = {
+  books: async (): Promise<LibraryBook[]> => {
+    // Never throw: these run during the production build, and a sleeping or
+    // briefly unreachable backend must degrade to an empty shelf, not fail
+    // the whole deploy.
+    try {
+      const res = await fetch(`${API_URL}/api/library/books`, {
+        next: { revalidate: 3600 },
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.books ?? [];
+    } catch {
+      return [];
+    }
+  },
+
+  book: async (slug: string, page = 1): Promise<LibraryBookPage | null> => {
+    try {
+      const res = await fetch(
+        `${API_URL}/api/library/books/${encodeURIComponent(slug)}?page=${page}`,
+        { next: { revalidate: 3600 } }
+      );
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+};
+
 export const chatApi = {
   list: () => apiFetch("/api/chats"),
 

@@ -1,14 +1,20 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 
+/**
+ * Chat-app chrome. Distinct from SiteHeader (which is for the marketing and
+ * library pages) — but the brand and these two links are the only way out of the
+ * chat, so they must always be present.
+ */
 export default function Header() {
   return (
     <header className="app-header">
-      <div className="app-header-brand">
+      <Link href="/" className="app-header-brand" aria-label="AI Mufti — home">
         <Image
           src="/AI-Mufti.png"
-          alt="AI Mufti logo"
+          alt=""
           width={32}
           height={32}
           className="app-header-logo"
@@ -18,10 +24,17 @@ export default function Header() {
           <span className="app-header-name">AI Mufti</span>
           <span className="app-header-tagline">Islamic guidance, clearly sourced</span>
         </div>
+      </Link>
+
+      <div className="app-header-right">
+        <nav className="app-header-links" aria-label="Site">
+          <Link href="/library">Library</Link>
+          <Link href="/tools/prayer-times">Prayer Times</Link>
+        </nav>
+        <span className="maslak-badge" title="Sunni Hanafi, Ahl-e-Sunnat wa Jama'at">
+          Hanafi · Ahl-e-Sunnat wa Jama&apos;at
+        </span>
       </div>
-      <span className="maslak-badge" title="Sunni Hanafi, Ahl-e-Sunnat wa Jama'at">
-        Hanafi · Ahl-e-Sunnat wa Jama&apos;at
-      </span>
     </header>
   );
 }

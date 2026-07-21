@@ -35,7 +35,6 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
   const skipNextLoadRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
   const [showAuth, setShowAuth] = useState(false);
-  const pendingTextRef = useRef<string | null>(null);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -147,27 +146,18 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
   const sendMessage = useCallback(() => {
     const text = input.trim();
     if (!text || loading) return;
-    // Require sign-in before the first message can be sent. Keep the typed text,
-    // open the auth modal, and send it automatically once the user is in.
-    if (!isSignedIn) {
-      pendingTextRef.current = text;
-      setShowAuth(true);
-      return;
-    }
+    // Guests chat freely — the backend already answers statelessly without a token.
+    // Signing in is only ever asked for to SAVE history, never to ask a question.
     setMessages((prev) => [...prev, { role: "user", content: text }]);
     setInput("");
     streamReply(text);
-  }, [input, loading, isSignedIn, streamReply]);
+  }, [input, loading, streamReply]);
 
-  // After a successful sign in / sign up, send the message the guest was trying to send.
+  // Signing in mid-conversation only starts persisting from here on — the guest
+  // turns already exchanged were never stored server-side.
   const handleAuthSuccess = useCallback(() => {
-    const pending = pendingTextRef.current;
-    pendingTextRef.current = null;
-    if (!pending) return;
-    setMessages((prev) => [...prev, { role: "user", content: pending }]);
-    setInput("");
-    streamReply(pending);
-  }, [streamReply]);
+    setShowAuth(false);
+  }, []);
 
   const stopGenerating = useCallback(() => {
     abortRef.current?.abort();
@@ -241,6 +231,14 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
               Stop
             </button>
           )}
+          {!isSignedIn && messages.length > 0 && !loading && (
+            <button type="button" className="pill-button" onClick={() => setShowAuth(true)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+              </svg>
+              Save chat
+            </button>
+          )}
           {showRegenerate && (
             <button type="button" className="pill-button" onClick={regenerate}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -290,7 +288,7 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
           <p className="input-footer">
             {isSignedIn
               ? "AI Mufti can make mistakes. Verify important rulings with a qualified mufti."
-              : "Sign in to save your chats. AI Mufti can make mistakes — verify important rulings."}
+              : "No account needed to ask. Sign in only to save your history."}
           </p>
         </form>
       </div>
@@ -299,8 +297,8 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
         open={showAuth}
         onClose={() => setShowAuth(false)}
         onSuccess={handleAuthSuccess}
-        title="Sign in to send your message"
-        description="Create a free account or sign in to chat with AI Mufti and keep your conversation history."
+        title="Save your conversations"
+        description="Create a free account to keep your chat history across devices. Asking questions never requires an account."
       />
     </div>
   );
