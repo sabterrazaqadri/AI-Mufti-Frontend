@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { libraryApi } from "./lib/api";
+import { answersApi, libraryApi, quranApi } from "./lib/api";
 
 const SITE_URL = "https://digitalmufti.vercel.app";
 
@@ -14,6 +14,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       { url: `${SITE_URL}/chat`, changeFrequency: "weekly", priority: 0.9 },
       { url: `${SITE_URL}/library`, changeFrequency: "weekly", priority: 0.8 },
       { url: `${SITE_URL}/about`, changeFrequency: "monthly", priority: 0.8 },
+      { url: `${SITE_URL}/quran`, changeFrequency: "monthly", priority: 0.9 },
+      { url: `${SITE_URL}/search`, changeFrequency: "monthly", priority: 0.6 },
+      { url: `${SITE_URL}/masla`, changeFrequency: "daily", priority: 0.8 },
       { url: `${SITE_URL}/tools/prayer-times`, changeFrequency: "daily", priority: 0.7 },
       { url: `${SITE_URL}/tools/qibla`, changeFrequency: "monthly", priority: 0.6 },
       { url: `${SITE_URL}/tools/calendar`, changeFrequency: "daily", priority: 0.6 },
@@ -58,5 +61,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Sitemap must still build if the backend is briefly unreachable.
   }
 
-  return [...staticRoutes, ...libraryRoutes];
+  // Every mushaf page, and every published mas'ala — both are real content pages
+  // worth indexing individually, and both are small enough to enumerate.
+  let quranRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const quran = await quranApi.index();
+    quranRoutes = (quran?.pages ?? []).map((p) => ({
+      url: `${SITE_URL}/quran/${p.page}`,
+      lastModified: now,
+      changeFrequency: "yearly" as const,
+      priority: 0.5,
+    }));
+  } catch {
+    /* keep building */
+  }
+
+  let maslaRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const answers = await answersApi.list(1000);
+    maslaRoutes = answers.map((a) => ({
+      url: `${SITE_URL}/masla/${a.slug}`,
+      lastModified: a.created_at ? new Date(a.created_at) : now,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    }));
+  } catch {
+    /* keep building */
+  }
+
+  return [...staticRoutes, ...libraryRoutes, ...quranRoutes, ...maslaRoutes];
 }

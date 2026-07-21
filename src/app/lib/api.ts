@@ -158,6 +158,56 @@ export const libraryApi = {
     ),
 };
 
+export interface QuranIndex {
+  pages: { page: number; surah: string | null }[];
+  total: number;
+  surahs: { surah: string; page: number }[];
+}
+
+export interface QuranPage {
+  page: number;
+  surah: string | null;
+  reference: string | null;
+  lead: string;
+  ayat: { number: number; text: string }[];
+  prev: number | null;
+  next: number | null;
+}
+
+export const quranApi = {
+  index: () => getJson<QuranIndex>("/api/quran/pages"),
+  page: (n: number) => getJson<QuranPage>(`/api/quran/pages/${n}`),
+};
+
+export interface PublicAnswer {
+  slug: string;
+  question: string;
+  answer: string;
+  sources: Source[];
+  views?: number;
+  created_at: string;
+}
+
+export const answersApi = {
+  get: (slug: string) =>
+    getJson<PublicAnswer>(`/api/answers/${encodeURIComponent(slug)}`),
+
+  list: async (limit = 60): Promise<{ slug: string; question: string; created_at: string }[]> => {
+    const data = await getJson<{ answers: { slug: string; question: string; created_at: string }[] }>(
+      `/api/answers?limit=${limit}`
+    );
+    return data?.answers ?? [];
+  },
+
+  /** Publishing is a user action, so this one is a live POST, not a cached read. */
+  publish: (question: string, answer: string, sources: Source[]) =>
+    fetch(`${API_URL}/api/answers`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question, answer, sources }),
+    }),
+};
+
 /** Path to the original page a citation came from, when we know it precisely. */
 export function sourceHref(s: Source): string | null {
   if (!s.slug) return null;

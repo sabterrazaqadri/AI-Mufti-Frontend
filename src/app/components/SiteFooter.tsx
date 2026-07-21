@@ -2,10 +2,13 @@ import Link from "next/link";
 
 const COLUMNS = [
   {
-    heading: "Ask",
+    heading: "Read",
     links: [
       { href: "/chat", label: "Ask a Mufti" },
+      { href: "/quran", label: "Al-Qur'an" },
       { href: "/library", label: "Library" },
+      { href: "/search", label: "Search the Library" },
+      { href: "/masla", label: "Answered Masail" },
       { href: "/about", label: "About & Maslak" },
     ],
   },

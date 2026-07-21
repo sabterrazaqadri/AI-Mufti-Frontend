@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useSession } from "../lib/auth-client";
 import ChatMessage from "./ChatMessage";
 import AuthModal from "./AuthModal";
+import VoiceInput from "./VoiceInput";
 import { chatApi, decodeSources, type ChatMessageDTO, type Source } from "../lib/api";
 
 interface Message {
@@ -285,6 +286,14 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
               className="chat-input"
               dir="auto"
               aria-label="Message AI Mufti"
+            />
+            <VoiceInput
+              disabled={loading}
+              // Append rather than replace, so dictation can extend a part-typed
+              // question instead of wiping it.
+              onTranscript={(t) =>
+                setInput((prev) => (prev.trim() ? `${prev.trim()} ${t}` : t))
+              }
             />
             <button
               type="submit"

@@ -16,6 +16,25 @@ const icons = {
       <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
     </>
   ),
+  quran: (
+    <>
+      <path d="M12 6.5C10.5 5 8.5 4.5 6 4.5A2 2 0 0 0 4 6.5v11a2 2 0 0 0 2 2c2.5 0 4.5.5 6 2 1.5-1.5 3.5-2 6-2a2 2 0 0 0 2-2v-11a2 2 0 0 0-2-2c-2.5 0-4.5.5-6 2z" />
+      <path d="M12 6.5v13" />
+    </>
+  ),
+  search: (
+    <>
+      <circle cx="11" cy="11" r="7" />
+      <path d="M21 21l-4.3-4.3" />
+    </>
+  ),
+  masla: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.5 9a2.5 2.5 0 1 1 3.4 2.3c-.6.25-.9.8-.9 1.45V13" />
+      <path d="M12 16.5h.01" />
+    </>
+  ),
   prayer: (
     <>
       <circle cx="12" cy="12" r="9" />
@@ -44,14 +63,21 @@ const icons = {
 
 type NavItem = { href: string; label: string; urdu: string; icon: keyof typeof icons };
 
+// The desktop bar shows the first few; the mobile drawer shows all of them, so
+// the bar stays readable while nothing becomes unreachable.
 const NAV: NavItem[] = [
   { href: "/chat", label: "Ask a Mufti", urdu: "سوال پوچھیں", icon: "chat" },
+  { href: "/quran", label: "Qur'an", urdu: "قرآن", icon: "quran" },
   { href: "/library", label: "Library", urdu: "کتب خانہ", icon: "library" },
+  { href: "/search", label: "Search", urdu: "تلاش", icon: "search" },
+  { href: "/masla", label: "Masail", urdu: "مسائل", icon: "masla" },
   { href: "/tools/prayer-times", label: "Prayer Times", urdu: "اوقاتِ نماز", icon: "prayer" },
   { href: "/tools/qibla", label: "Qibla", urdu: "قبلہ", icon: "qibla" },
   { href: "/tools/calendar", label: "Hijri Calendar", urdu: "اسلامی کیلنڈر", icon: "calendar" },
   { href: "/tools/zakat", label: "Zakat", urdu: "زکوٰۃ", icon: "zakat" },
 ];
+
+const DESKTOP_NAV = NAV.slice(0, 5);
 
 function Icon({ name }: { name: keyof typeof icons }) {
   return (
@@ -103,7 +129,7 @@ export default function SiteHeader() {
         </Link>
 
         <nav className="site-nav" aria-label="Main">
-          {NAV.map((item) => (
+          {DESKTOP_NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}

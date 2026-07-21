@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Noto_Nastaliq_Urdu, Cormorant_Garamond } from "next/font/google";
 import { ToastProvider } from "./components/ToastProvider";
 import { ConfirmProvider } from "./components/ConfirmProvider";
+import ServiceWorker from "./components/ServiceWorker";
 import "./globals.css";
 // Loaded after globals so the site/marketing layer can build on its tokens.
 import "./site.css";
@@ -83,6 +84,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ToastProvider>
           <ConfirmProvider>{children}</ConfirmProvider>
         </ToastProvider>
+        <ServiceWorker />
       </body>
     </html>
   );

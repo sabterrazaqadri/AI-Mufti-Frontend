@@ -6,6 +6,8 @@ import remarkGfm from "remark-gfm";
 import SourcesPanel from "./SourcesPanel";
 import type { Source } from "../lib/api";
 import { buildVerifyUrl, verifyEnabled } from "../lib/verify";
+import SpeakButton from "./SpeakButton";
+import PublishButton from "./PublishButton";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -81,6 +83,7 @@ export default function ChatMessage({
         {!isUser && (
           <div className="message-header">
             <span className="role-label">AI Mufti</span>
+            <SpeakButton text={content} />
             <button
               onClick={handleCopy}
               className="copy-button"
@@ -117,6 +120,12 @@ export default function ChatMessage({
         {/* Only once the answer has actually streamed in — citations appearing
             above an empty bubble reads as if they are the reply. */}
         {!isUser && content && <SourcesPanel sources={sources} />}
+
+        {!isUser && content && question && (
+          <div className="answer-actions">
+            <PublishButton question={question} answer={content} sources={sources} />
+          </div>
+        )}
 
         {/* Put a human at the end of the chain. Hidden entirely when no
             Dar al-Ifta number is configured, rather than linking nowhere. */}
