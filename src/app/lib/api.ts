@@ -57,6 +57,18 @@ export interface LibraryBook {
   slug: string;
   name: string;
   passages: number;
+  /** Shelf slug, assigned by the backend. Never empty — falls back to "mutafarriq". */
+  category: string;
+}
+
+export interface LibraryCategory {
+  slug: string;
+  name: string;
+  urdu: string;
+  desc: string;
+  books: LibraryBook[];
+  book_count: number;
+  passages: number;
 }
 
 export interface LibraryPassage {
@@ -74,6 +86,7 @@ export interface LibraryJild {
 export interface LibraryBookDetail {
   slug: string;
   name: string;
+  category?: { slug: string; name: string; urdu: string };
   /** False for books scraped by section, which carry no printed page number. */
   has_safha: boolean;
   jilds: LibraryJild[];
@@ -122,6 +135,16 @@ export const libraryApi = {
     const data = await getJson<{ books: LibraryBook[] }>("/api/library/books");
     return data?.books ?? [];
   },
+
+  categories: async (): Promise<LibraryCategory[]> => {
+    const data = await getJson<{ categories: LibraryCategory[] }>(
+      "/api/library/categories"
+    );
+    return data?.categories ?? [];
+  },
+
+  category: (slug: string) =>
+    getJson<LibraryCategory>(`/api/library/categories/${encodeURIComponent(slug)}`),
 
   book: (slug: string) =>
     getJson<LibraryBookDetail>(`/api/library/books/${encodeURIComponent(slug)}`),

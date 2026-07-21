@@ -9,56 +9,57 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "Library — Every Book AI Mufti Answers From",
   description:
-    "Browse the full digitised library behind AI Mufti: Bahar-e-Shariat, Fatawa Razawiyya, Miraat-ul-Manajeeh, Sirat-ul-Jinan, Ja Al-Haq and more — every page open to read.",
+    "Browse the full digitised library behind AI Mufti by subject: Qur'an & Tafseer, Hadith, Fiqh & Fatawa, Aqaid, Seerat, Tasawwuf and the darsi kutub — every page open to read.",
   alternates: { canonical: "/library" },
 };
 
-function nf(n: number) {
-  return new Intl.NumberFormat("en-US").format(n);
-}
+const nf = (n: number) => new Intl.NumberFormat("en-US").format(n);
 
 export default async function LibraryPage() {
-  const books = await libraryApi.books();
-  const total = books.reduce((s, b) => s + Number(b.passages || 0), 0);
+  const categories = await libraryApi.categories();
+  const totalBooks = categories.reduce((s, c) => s + c.book_count, 0);
+  const totalPassages = categories.reduce((s, c) => s + c.passages, 0);
 
   return (
     <>
       <SiteHeader />
       <main className="page">
         <div className="page-head">
-          <span className="eyebrow">کتب خانہ</span>
+          <span className="eyebrow" dir="rtl">
+            کتب خانہ
+          </span>
           <h1>The Library</h1>
           <p>
-            {books.length
-              ? `${books.length} books · ${nf(total)} passages`
+            {totalBooks
+              ? `${totalBooks} books · ${nf(totalPassages)} passages`
               : "The library is loading"}
             . Every answer AI Mufti gives is taken from these pages — and you can read
             them yourself.
           </p>
         </div>
 
-        {books.length === 0 ? (
+        {categories.length === 0 ? (
           <p className="empty-state">
             The library could not be reached right now. Please try again shortly.
           </p>
         ) : (
-          <ul className="library-list">
-            {books.map((b) => (
-              <li key={b.slug}>
-                <Link href={`/library/${b.slug}`} className="library-row">
-                  <span className="library-row-main">
-                    <span className="library-row-name">{b.name}</span>
-                    <span className="library-row-meta">
-                      {nf(Number(b.passages))} passages
-                    </span>
+          <div className="cat-grid">
+            {categories.map((c) => (
+              <Link key={c.slug} href={`/library/category/${c.slug}`} className="cat-card">
+                <span className="cat-head">
+                  <span className="cat-urdu urdu" dir="rtl">
+                    {c.urdu}
                   </span>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M9 6l6 6-6 6" />
-                  </svg>
-                </Link>
-              </li>
+                  <span className="cat-name">{c.name}</span>
+                </span>
+                <span className="cat-desc">{c.desc}</span>
+                <span className="cat-meta">
+                  {c.book_count} {c.book_count === 1 ? "book" : "books"} ·{" "}
+                  {nf(c.passages)} passages
+                </span>
+              </Link>
             ))}
-          </ul>
+          </div>
         )}
       </main>
       <SiteFooter />

@@ -40,6 +40,14 @@ export default async function BookPage({ params }: { params: Params }) {
       <main className="page">
         <nav className="crumbs" aria-label="Breadcrumb">
           <Link href="/library">Library</Link>
+          {book.category?.slug && (
+            <>
+              <span aria-hidden="true">/</span>
+              <Link href={`/library/category/${book.category.slug}`}>
+                {book.category.name}
+              </Link>
+            </>
+          )}
           <span aria-hidden="true">/</span>
           <span>{book.name}</span>
         </nav>

@@ -1077,6 +1077,47 @@ fieldset { border: 0; padding: 0; margin: 0; }
 }
 .verify-button .urdu { font-size: 0.82rem; font-weight: 500; opacity: 0.82; }
 
+/* ── Library: categories (the shelves) ──────────────────── */
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.cat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 26px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--brass);
+  border-radius: var(--r-md);
+  text-decoration: none;
+  color: var(--text);
+  transition: border-color 200ms ease, transform 200ms ease;
+}
+.cat-card:hover {
+  border-color: var(--accent);
+  border-left-color: var(--accent);
+  transform: translateY(-3px);
+}
+.cat-head { display: flex; flex-direction: column; gap: 2px; }
+.cat-urdu { font-size: 1.25rem; line-height: 2; color: var(--brass); }
+.cat-name {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.cat-desc { font-size: 0.88rem; line-height: 1.6; color: var(--text-secondary); }
+.cat-meta {
+  margin-top: auto;
+  padding-top: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
 /* ── Library: volumes ───────────────────────────────────── */
 .jild-grid {
   display: grid;

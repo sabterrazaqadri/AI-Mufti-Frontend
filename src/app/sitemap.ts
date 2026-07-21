@@ -26,6 +26,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // reach them anyway, and listing them would push the sitemap into megabytes.
   let libraryRoutes: MetadataRoute.Sitemap = [];
   try {
+    const categories = await libraryApi.categories();
+    const categoryRoutes = categories.map((c) => ({
+      url: `${SITE_URL}/library/category/${c.slug}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    }));
+
     const books = await libraryApi.books();
     const details = await Promise.all(books.map((b) => libraryApi.book(b.slug)));
 
@@ -45,6 +53,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }));
       return [bookUrl, ...jildUrls];
     });
+    libraryRoutes = [...categoryRoutes, ...libraryRoutes];
   } catch {
     // Sitemap must still build if the backend is briefly unreachable.
   }
