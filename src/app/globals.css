@@ -74,8 +74,9 @@ body {
   line-height: 2.35;
   /* Nastaliq resolves at larger sizes; at Latin body size it turns to mush. */
   font-size: 1.06em;
-  /* Kashida justification would stretch joins the font already shapes. */
-  text-align: right;
+  /* No text-align here: dir="rtl" already right-aligns via the default `start`,
+     and forcing `right` overrode centring wherever an RTL line sits inside a
+     centred block — which is exactly what happened to the Bismillah. */
   font-synthesis: none;
   font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
   text-rendering: optimizeLegibility;

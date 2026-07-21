@@ -23,11 +23,14 @@ const COLUMNS = [
 export default function SiteFooter() {
   return (
     <footer className="site-footer">
+      {/* The Bismillah stands on its own line above the columns, centred — it is
+          not one column's heading. */}
+      <p className="site-footer-bismillah" dir="rtl" lang="ar">
+        بِسْمِ اللہِ الرَّحْمٰنِ الرَّحِیْمِ
+      </p>
+
       <div className="site-footer-inner">
         <div className="site-footer-brand">
-          <p className="site-footer-bismillah" dir="rtl" lang="ar">
-            بِسْمِ اللہِ الرَّحْمٰنِ الرَّحِیْمِ
-          </p>
           <p className="site-footer-desc">
             AI Mufti answers from a digitised library of authentic Ahl-e-Sunnat wa
             Jama&apos;at works, and stays silent when it has no source to stand on.

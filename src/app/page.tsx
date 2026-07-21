@@ -7,9 +7,9 @@ import { libraryApi } from "./lib/api";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "AI Mufti — Hanafi Fatwa Answers with Real Book Citations",
+  title: "AI Mufti — Islamic AI Answers from the Qur'an and Hadith",
   description:
-    "Ask any Islamic question and get an answer quoted from Bahar-e-Shariat, Fatawa Razawiyya, Miraat-ul-Manajeeh and other authentic Ahl-e-Sunnat works — with the jild and safha. Urdu, Roman Urdu and English. Free, no account needed.",
+    "Ask any Islamic question and get an answer grounded in the Qur'an al-Kareem and the Hadith of the Prophet ﷺ, explained through the classical books of the ulama and shown with the exact page. Hanafi, Ahl-e-Sunnat wa Jama'at. Urdu, Roman Urdu and English — free, no account needed.",
   alternates: { canonical: "/" },
 };
 
@@ -104,18 +104,23 @@ export default async function LandingPage() {
               بِسْمِ اللہِ الرَّحْمٰنِ الرَّحِیْمِ
             </p>
 
-            <span className="eyebrow">Hanafi · Ahl-e-Sunnat wa Jama&apos;at</span>
-
             <h1 className="hero-title">
-              Every ruling carries
-              <span className="hero-title-accent"> its page number.</span>
+              Islamic guidance from the
+              <span className="hero-title-accent"> Qur&apos;an and Hadith.</span>
             </h1>
 
             <p className="hero-sub">
-              Ask in Urdu, Roman Urdu or English. AI Mufti answers only from{" "}
-              {books.length ? `${books.length} digitised` : "digitised"} Ahl-e-Sunnat
-              works — Bahar-e-Shariat, Fatawa Razawiyya, Miraat-ul-Manajeeh — and quotes
-              the jild and safha it took the ruling from. When the books are silent, so is it.
+              Ask anything in Urdu, Roman Urdu or English. AI Mufti answers from the
+              Qur&apos;an al-Kareem and the Hadith of the Prophet ﷺ — understood through
+              the classical books of the ulama, and always shown with the exact page the
+              ruling came from. When the sources are silent, so is it.
+            </p>
+
+            {/* The maslak follows the message rather than leading it: a reader must
+                first see what this is, then whose position it gives. */}
+            <p className="hero-maslak">
+              <span className="hero-maslak-label">Maslak</span>
+              Hanafi · Ahl-e-Sunnat wa Jama&apos;at
             </p>
 
             <div className="hero-actions">
@@ -202,8 +207,10 @@ export default async function LandingPage() {
             <span className="eyebrow">The library</span>
             <h2 className="section-title">Read the sources yourself.</h2>
             <p className="section-lede">
-              Nothing is hidden behind the answer. Every book AI Mufti draws on is open
-              to browse, page by page.
+              The Qur&apos;an and Hadith are the proof; these books are how the ulama
+              explained them — tafseer, sharh of hadith, and the fiqh derived from both.
+              Nothing is hidden behind the answer: every one of them is open to browse,
+              page by page.
             </p>
 
             <div className="books-grid">
