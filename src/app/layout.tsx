@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     template: "%s · AI Mufti",
   },
   description:
-    "Ask authentic Islamic questions and get clear, sourced answers based on the Sunni Hanafi Ahl-e-Sunnat wa Jama'at school — referencing Fatawa Razvia, Bahar-e-Shariat and classical Hanafi works. Answers in Urdu, Roman Urdu, English or Arabic.",
+    "Ask authentic Islamic questions and get clear, sourced answers based on the Sunni Hanafi Ahl-e-Sunnat wa Jama'at school — referencing Fatawa Razvia, Bahar-e-Shariat and classical Hanafi works. Ask and get answered in any language — Urdu, Roman Urdu, English, Arabic and more.",
   keywords: [
     "AI Mufti", "Islamic Q&A", "Hanafi fiqh", "Barelvi", "Ahl-e-Sunnat",
     "Fatawa Razvia", "Bahar-e-Shariat", "Islamic chatbot", "masail", "fatwa",

@@ -9,7 +9,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "AI Mufti — Islamic AI Answers from the Qur'an and Hadith",
   description:
-    "Ask any Islamic question and get an answer grounded in the Qur'an al-Kareem and the Hadith of the Prophet ﷺ, explained through the classical books of the ulama and shown with the exact page. Hanafi, Ahl-e-Sunnat wa Jama'at. Urdu, Roman Urdu and English — free, no account needed.",
+    "Ask any Islamic question and get an answer grounded in the Qur'an al-Kareem and the Hadith of the Prophet ﷺ, explained through the classical books of the ulama and shown with the exact page. Hanafi, Ahl-e-Sunnat wa Jama'at. Ask in any language — free, no account needed.",
   alternates: { canonical: "/" },
 };
 
@@ -27,8 +27,8 @@ const FAQS = [
     a: "It refuses. If no passage in the library supports an answer, AI Mufti says it has no mustanad reference instead of guessing. This is enforced in the retrieval layer, not merely requested in a prompt — an unsupported ruling is never generated in the first place.",
   },
   {
-    q: "Can I ask in Roman Urdu?",
-    a: "Yes. Write \"namaz e janaza ka tareeqa\" or \"سجدۂ سہو کب واجب ہے؟\" or plain English — AI Mufti replies in the same language and script you used, and keeps Qur'anic and hadith text in Arabic script.",
+    q: "Which languages can I ask in?",
+    a: "Any. Urdu, Roman Urdu (\"namaz e janaza ka tareeqa\"), Arabic, English, Hindi, Bengali, Turkish, Persian, Indonesian, French, Pashto and more — AI Mufti replies in the same language and script you wrote in, and always keeps Qur'anic and hadith text in Arabic script. The books themselves are in Urdu and Arabic, so an answer in another language is a faithful translation of the Urdu ruling, with its reference left exactly as printed.",
   },
   {
     q: "Do I need an account?",
@@ -114,7 +114,7 @@ export default async function LandingPage() {
             </h1>
 
             <p className="hero-sub">
-              Ask anything in Urdu, Roman Urdu or English. AI Mufti answers from the
+              Ask in any language — Urdu, Roman Urdu, English, Arabic or your own. AI Mufti answers from the
               Qur&apos;an al-Kareem and the Hadith of the Prophet ﷺ — understood through
               the classical books of the ulama, and always shown with the exact page the
               ruling came from. When the sources are silent, so is it.
@@ -155,8 +155,10 @@ export default async function LandingPage() {
               <span className="stat-label">Passages, each with jild &amp; safha</span>
             </div>
             <div className="stat">
-              <span className="stat-num">4</span>
-              <span className="stat-label">Languages — Urdu, Roman Urdu, English, Arabic</span>
+              <span className="stat-num">Any</span>
+              <span className="stat-label">
+                Language you ask in — answered in the same one
+              </span>
             </div>
             <div className="stat">
               <span className="stat-num">0</span>

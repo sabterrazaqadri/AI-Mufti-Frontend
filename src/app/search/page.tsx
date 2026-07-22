@@ -44,7 +44,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           <h1>Search the Library</h1>
           <p>
             Search the actual text of every book AI Mufti answers from. Ask in Urdu,
-            Roman Urdu or English — results link straight to the original page.
+            Roman Urdu, English or any other language — results link straight to the original page.
           </p>
         </div>
 
