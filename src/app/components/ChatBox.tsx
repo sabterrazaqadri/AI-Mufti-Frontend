@@ -193,15 +193,18 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
       <div className="chat-messages">
         {messages.length === 0 ? (
           <div className="chat-empty">
+            <p className="chat-empty-bismillah" dir="rtl" lang="ar">
+              بِسْمِ اللہِ الرَّحْمٰنِ الرَّحِیْمِ
+            </p>
             <div className="chat-empty-icon">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/AI-Mufti.png" alt="AI Mufti" width={48} height={48} />
+              <img src="/AI-Mufti.png" alt="AI Mufti" width={44} height={44} />
             </div>
-            <h3>Assalamu Alaikum 👋</h3>
+            <h3>Assalamu Alaikum</h3>
             <p>
-              Ask any Islamic question. AI Mufti answers according to the Sunni Hanafi
-              Ahl-e-Sunnat wa Jama&apos;at school, with references to authentic sources such as
-              Fatawa Razvia and Bahar-e-Shariat.
+              Ask in any language. Answers come from the Qur&apos;an, the Hadith and the
+              classical Ahl-e-Sunnat books — Bahar-e-Shariat, Fatawa Razawiyya,
+              Miraat-ul-Manajeeh — always with the page they came from.
             </p>
             <div className="chat-suggestions">
               {SUGGESTIONS.map((s) => (
