@@ -45,7 +45,13 @@ export const metadata: Metadata = {
   ],
   applicationName: "AI Mufti",
   authors: [{ name: "Sabter Raza Qadri" }],
-  icons: { icon: "/AI-Mufti.png", apple: "/AI-Mufti.png" },
+  icons: {
+    icon: [
+      { url: "/logo.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/apple-icon.png",
+  },
   openGraph: {
     type: "website",
     url: SITE_URL,
@@ -53,14 +59,14 @@ export const metadata: Metadata = {
     description:
       "Clear, sourced answers based on the Sunni Hanafi Ahl-e-Sunnat wa Jama'at school of thought.",
     siteName: "AI Mufti",
-    images: [{ url: "/AI-Mufti.png", width: 512, height: 512, alt: "AI Mufti" }],
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "AI Mufti" }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "AI Mufti — Hanafi Ahl-e-Sunnat wa Jama'at Islamic Q&A",
     description:
       "Clear, sourced answers based on the Sunni Hanafi Ahl-e-Sunnat wa Jama'at school.",
-    images: ["/AI-Mufti.png"],
+    images: ["/og.png"],
   },
   robots: { index: true, follow: true },
 };

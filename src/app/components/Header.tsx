@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import Logo from "./Logo";
 
 /**
  * Chat-app chrome. Distinct from SiteHeader (which is for the marketing and
@@ -12,14 +12,7 @@ export default function Header() {
   return (
     <header className="app-header">
       <Link href="/" className="app-header-brand" aria-label="AI Mufti — home">
-        <Image
-          src="/AI-Mufti.png"
-          alt=""
-          width={32}
-          height={32}
-          className="app-header-logo"
-          priority
-        />
+        <Logo size={34} className="app-header-logo" />
         <div className="app-header-titles">
           <span className="app-header-name">AI Mufti</span>
           <span className="app-header-tagline">Islamic guidance, clearly sourced</span>

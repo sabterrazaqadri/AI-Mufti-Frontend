@@ -5,6 +5,7 @@ import { useSession } from "../lib/auth-client";
 import ChatMessage from "./ChatMessage";
 import AuthModal from "./AuthModal";
 import VoiceInput from "./VoiceInput";
+import Logo from "./Logo";
 import { chatApi, decodeSources, type ChatMessageDTO, type Source } from "../lib/api";
 
 interface Message {
@@ -196,10 +197,7 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
             <p className="chat-empty-bismillah" dir="rtl" lang="ar">
               بِسْمِ اللہِ الرَّحْمٰنِ الرَّحِیْمِ
             </p>
-            <div className="chat-empty-icon">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/AI-Mufti.png" alt="AI Mufti" width={44} height={44} />
-            </div>
+            <Logo size={56} />
             <h3>Assalamu Alaikum</h3>
             <p>
               Ask in any language. Answers come from the Qur&apos;an, the Hadith and the

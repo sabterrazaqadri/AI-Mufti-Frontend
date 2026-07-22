@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Logo from "./Logo";
 
 /** Inline SVG icons — no icon font, no emoji, so they inherit colour and stay crisp. */
 const icons = {
@@ -121,7 +121,7 @@ export default function SiteHeader() {
     <header className="site-header">
       <div className="site-header-inner">
         <Link href="/" className="site-brand" aria-label="AI Mufti — home">
-          <Image src="/AI-Mufti.png" alt="" width={36} height={36} priority />
+          <Logo size={36} />
           <span className="site-brand-text">
             <strong>AI Mufti</strong>
             <small>Hanafi · Ahl-e-Sunnat</small>

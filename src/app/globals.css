@@ -234,13 +234,9 @@ body {
   margin: 0 0 18px; text-align: center;
 }
 
-.chat-empty-icon {
-  width: 64px; height: 64px; border-radius: 18px;
-  background: var(--surface); border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
-  margin-bottom: 18px; box-shadow: var(--shadow);
-}
-.chat-empty-icon img { border-radius: 12px; }
+/* The mark stands on its own here — no tile behind it, so it reads as the
+   product's signature rather than an app-store icon dropped into the page. */
+.chat-empty > svg { margin-bottom: 20px; }
 
 .chat-empty h3 {
   font-family: var(--font-display), Georgia, serif;
@@ -251,11 +247,13 @@ body {
   font-size: 0.95rem; color: var(--text-secondary);
   max-width: 480px; margin: 0 0 26px; line-height: 1.7;
 }
-.chat-empty-note {
+/* Needs to out-specify `.chat-empty p` above (0-1-1), whose `margin: 0 0 26px`
+   was resetting margin-top to 0 and pinning this note to the suggestions. */
+.chat-empty .chat-empty-note {
   font-size: 0.78rem; color: var(--text-secondary);
-  max-width: 460px; margin-top: 26px;
-  padding: 12px 16px; border-radius: var(--r-md, 14px);
-  background: var(--brass-soft); line-height: 1.6;
+  max-width: 460px; margin: 40px 0 0;
+  padding: 13px 18px; border-radius: var(--r-md, 14px);
+  background: var(--brass-soft); line-height: 1.65;
 }
 
 .chat-suggestions {

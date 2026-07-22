@@ -21,9 +21,12 @@ export default function manifest(): MetadataRoute.Manifest {
     dir: "auto",
     categories: ["education", "books", "lifestyle"],
     icons: [
-      { src: "/AI-Mufti.png", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/AI-Mufti.png", sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: "/AI-Mufti.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: "/logo.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      // Separate art: launchers crop maskable icons to a circle or squircle, so
+      // this one keeps the dome inside the safe zone rather than losing its tip.
+      { src: "/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
     shortcuts: [
       { name: "Ask a question", url: "/chat" },

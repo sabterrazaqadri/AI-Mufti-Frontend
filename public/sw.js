@@ -5,10 +5,10 @@
  * be served stale, so only the app shell and static assets are cached. A cached
  * fatwa or a yesterday's Asr time would be worse than an offline message.
  */
-const CACHE = "ai-mufti-shell-v1";
+const CACHE = "ai-mufti-shell-v2";
 const OFFLINE_URL = "/offline";
 
-const SHELL = [OFFLINE_URL, "/AI-Mufti.png"];
+const SHELL = [OFFLINE_URL, "/logo.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -42,7 +42,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   // Static build assets are content-hashed, so cache-first is safe for them.
-  if (url.pathname.startsWith("/_next/static/") || url.pathname === "/AI-Mufti.png") {
+  if (url.pathname.startsWith("/_next/static/") || url.pathname === "/logo.svg") {
     event.respondWith(
       caches.match(request).then(
         (hit) =>
