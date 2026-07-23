@@ -121,31 +121,27 @@ export default function ChatMessage({
             above an empty bubble reads as if they are the reply. */}
         {!isUser && content && <SourcesPanel sources={sources} />}
 
-        {!isUser && content && question && (
+        {/* Both post-answer actions share one row of quiet pills, so on a narrow
+            screen they wrap together instead of one becoming a heavy full-width bar.
+            Verify is hidden entirely when no Dar al-Ifta number is configured. */}
+        {!isUser && content && question && (verifyEnabled() || (sources && sources.length > 0)) && (
           <div className="answer-actions">
             <PublishButton question={question} answer={content} sources={sources} />
+            {verifyEnabled() && (
+              <a
+                className="verify-button"
+                href={buildVerifyUrl(question, content, sources)}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Send this question, answer and its references to a mufti on WhatsApp"
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12.04 2a9.9 9.9 0 0 0-8.5 14.96L2 22l5.2-1.5A9.9 9.9 0 1 0 12.04 2zm0 1.9a8 8 0 1 1-4.07 14.9l-.29-.17-3.08.89.9-3-.19-.3A8 8 0 0 1 12.04 3.9zm4.6 10.1c-.25-.13-1.47-.72-1.7-.8-.23-.09-.4-.13-.56.12s-.64.8-.79.97-.29.18-.54.06a6.5 6.5 0 0 1-1.92-1.19 7.3 7.3 0 0 1-1.33-1.65c-.14-.25-.01-.38.11-.5l.37-.44c.12-.14.16-.24.24-.4a.45.45 0 0 0-.02-.43c-.07-.13-.56-1.35-.77-1.85s-.41-.42-.56-.43h-.48a.92.92 0 0 0-.67.31 2.8 2.8 0 0 0-.87 2.08 4.85 4.85 0 0 0 1.02 2.58c.12.17 1.75 2.67 4.24 3.74a14.3 14.3 0 0 0 1.42.53 3.4 3.4 0 0 0 1.56.1 2.56 2.56 0 0 0 1.68-1.19 2.07 2.07 0 0 0 .15-1.18c-.06-.11-.23-.18-.48-.3z" />
+                </svg>
+                Verify with a mufti
+              </a>
+            )}
           </div>
-        )}
-
-        {/* Put a human at the end of the chain. Hidden entirely when no
-            Dar al-Ifta number is configured, rather than linking nowhere. */}
-        {!isUser && content && question && verifyEnabled() && (
-          <a
-            className="verify-button"
-            href={buildVerifyUrl(question, content, sources)}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M12.04 2a9.9 9.9 0 0 0-8.5 14.96L2 22l5.2-1.5A9.9 9.9 0 1 0 12.04 2zm0 1.9a8 8 0 1 1-4.07 14.9l-.29-.17-3.08.89.9-3-.19-.3A8 8 0 0 1 12.04 3.9zm4.6 10.1c-.25-.13-1.47-.72-1.7-.8-.23-.09-.4-.13-.56.12s-.64.8-.79.97-.29.18-.54.06a6.5 6.5 0 0 1-1.92-1.19 7.3 7.3 0 0 1-1.33-1.65c-.14-.25-.01-.38.11-.5l.37-.44c.12-.14.16-.24.24-.4a.45.45 0 0 0-.02-.43c-.07-.13-.56-1.35-.77-1.85s-.41-.42-.56-.43h-.48a.92.92 0 0 0-.67.31 2.8 2.8 0 0 0-.87 2.08 4.85 4.85 0 0 0 1.02 2.58c.12.17 1.75 2.67 4.24 3.74a14.3 14.3 0 0 0 1.42.53 3.4 3.4 0 0 0 1.56.1 2.56 2.56 0 0 0 1.68-1.19 2.07 2.07 0 0 0 .15-1.18c-.06-.11-.23-.18-.48-.3z" />
-            </svg>
-            <span>
-              Verify with a mufti
-              <span className="urdu" dir="rtl">
-                مفتی صاحب سے تصدیق کروائیں
-              </span>
-            </span>
-          </a>
         )}
 
         {copied && <span className="copy-feedback">Copied!</span>}

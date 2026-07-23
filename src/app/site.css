@@ -1094,33 +1094,26 @@ fieldset { border: 0; padding: 0; margin: 0; }
 .source-link svg { width: 14px; height: 14px; }
 
 /* ── Verify with a mufti ────────────────────────────────── */
-/* WhatsApp green, not the brand green — this button leaves the app and hands
-   the exchange to a human, and should look like the thing it opens. */
+/* A quiet outline pill matching the publish button beside it — not a loud filled
+   bar. WhatsApp identity lives in the coloured icon and the green hover, so the
+   two post-answer actions read as one calm row on every width. */
 .verify-button {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 12px;
-  padding: 10px 16px;
-  min-height: 44px;
+  gap: 8px;
+  padding: 9px 15px;
+  min-height: 40px;
+  border: 1px solid var(--border);
   border-radius: 999px;
-  background: #25d366;
-  color: #06301a;
-  font-size: 0.85rem;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
   font-weight: 600;
   text-decoration: none;
-  transition: filter 180ms ease, transform 180ms ease;
+  transition: border-color 180ms ease, color 180ms ease;
 }
-.verify-button:hover { filter: brightness(1.06); }
-.verify-button:active { transform: translateY(1px); }
-.verify-button svg { width: 19px; height: 19px; flex-shrink: 0; }
-.verify-button > span {
-  display: flex;
-  align-items: baseline;
-  gap: 9px;
-  flex-wrap: wrap;
-}
-.verify-button .urdu { font-size: 0.82rem; font-weight: 500; opacity: 0.82; }
+.verify-button:hover { border-color: #25d366; color: #128c3e; }
+.verify-button svg { width: 16px; height: 16px; flex-shrink: 0; color: #25d366; }
 
 /* ── Library: categories (the shelves) ──────────────────── */
 .cat-grid {
@@ -1589,7 +1582,9 @@ fieldset { border: 0; padding: 0; margin: 0; }
   .folio-body { font-size: 1.06rem; }
   .page-index-row { gap: 12px; padding: 10px 12px; }
   .page-index-num { min-width: 52px; font-size: 1.1rem; }
-  .verify-button { width: 100%; justify-content: center; }
+  /* Stay a pill, not a full-width bar — the old override was the "bhadda" look
+     on mobile. The row wraps naturally if both actions don't fit. */
+  .answer-actions { gap: 8px; }
   .search-form { flex-direction: column; }
   .search-form .btn { width: 100%; }
   .folio.mushaf { padding: 22px 18px 26px; }
