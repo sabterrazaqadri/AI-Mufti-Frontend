@@ -5,7 +5,9 @@ import SiteHeader from "../../components/SiteHeader";
 import SiteFooter from "../../components/SiteFooter";
 import { quranApi } from "../../lib/api";
 
-export const revalidate = 3600;
+// Short on purpose: a page rendered while the backend was asleep caches its
+// "could not be reached" state too, so it must expire quickly.
+export const revalidate = 300;
 
 type Params = Promise<{ page: string }>;
 

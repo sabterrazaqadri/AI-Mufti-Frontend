@@ -4,7 +4,9 @@ import SiteHeader from "../components/SiteHeader";
 import SiteFooter from "../components/SiteFooter";
 import { libraryApi } from "../lib/api";
 
-export const revalidate = 3600;
+// Short on purpose: a page rendered while the backend was asleep caches its
+// "could not be reached" state too, so it must expire quickly.
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Library — Every Book AI Mufti Answers From",
@@ -40,7 +42,8 @@ export default async function LibraryPage() {
 
         {categories.length === 0 ? (
           <p className="empty-state">
-            The library could not be reached right now. Please try again shortly.
+            The library is waking up — this takes about half a minute after a quiet
+            spell. Please refresh in a moment.
           </p>
         ) : (
           <div className="cat-grid">

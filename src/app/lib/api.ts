@@ -1,7 +1,7 @@
 import { getToken } from "./auth-client";
 
 export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://digital-mufti-backend.onrender.com";
+  process.env.NEXT_PUBLIC_API_URL || "https://sabter-ai-mufti-backend.hf.space";
 
 export interface Chat {
   id: string;
@@ -26,6 +26,25 @@ export interface ChatMessageDTO {
   role: "user" | "assistant";
   content: string;
   sources?: Source[] | null;
+}
+
+// Markers of a reply that carries no ruling — the "no mustanad reference" refusal
+// or the "I only cover Islamic matters" out-of-scope reply. Mirrors the backend's
+// _REFUSAL_MARKERS. Citations must never render under such an answer.
+const REFUSAL_MARKERS = [
+  "مستند حوالہ نہیں",
+  "mustanad hawala nahi",
+  "authentic reference on this matter",
+  "صرف اسلامی مسائل",
+  "sirf islami masail",
+  "only have knowledge about islamic matters",
+  "only cover islamic matters",
+];
+
+/** True when the answer text is a refusal / out-of-scope reply (no ruling given). */
+export function isRefusalAnswer(text: string | null | undefined): boolean {
+  const low = (text || "").toLowerCase();
+  return REFUSAL_MARKERS.some((m) => low.includes(m.toLowerCase()));
 }
 
 /** Decode the base64(JSON) X-Sources header into citation cards (UTF-8 safe). */
@@ -114,20 +133,42 @@ export interface LibraryPageDetail {
 }
 
 /**
+ * How long a rendered library page stays cached. Deliberately short: the corpus
+ * only changes when a book is ingested, but a page rendered while the backend was
+ * asleep shows "could not be reached", and that failure gets cached too — an hour
+ * of a broken shelf is far worse than re-rendering a page that rarely changes.
+ */
+export const LIBRARY_REVALIDATE = 300;
+
+/**
  * Library reads are public and unauthenticated, so they can run on the server for
- * SEO. Revalidated hourly — the corpus only changes when a new book is ingested.
+ * SEO.
  *
  * None of these throw: they run during the production build, and a sleeping or
  * briefly unreachable backend must degrade to an empty shelf, not fail the deploy.
+ * They do retry, because "briefly unreachable" is the normal case on a free tier
+ * that spins down after 15 minutes idle and needs ~30s to wake.
  */
-async function getJson<T>(path: string): Promise<T | null> {
-  try {
-    const res = await fetch(`${API_URL}${path}`, { next: { revalidate: 3600 } });
-    if (!res.ok) return null;
-    return (await res.json()) as T;
-  } catch {
-    return null;
+async function getJson<T>(path: string, attempts = 3): Promise<T | null> {
+  for (let i = 0; i < attempts; i += 1) {
+    try {
+      const res = await fetch(`${API_URL}${path}`, {
+        next: { revalidate: LIBRARY_REVALIDATE },
+        // The backend sleeps on the free tier and takes ~30s to wake, so the
+        // first try is short and later ones wait out a cold start.
+        signal: AbortSignal.timeout(i === 0 ? 8000 : 30000),
+      });
+      if (res.ok) return (await res.json()) as T;
+      // A 404/400 is a real answer — retrying it just stalls the render.
+      if (res.status < 500) return null;
+    } catch {
+      // Timeout or network error: the backend is probably still waking up.
+    }
+    if (i < attempts - 1) {
+      await new Promise((r) => setTimeout(r, 1000 * (i + 1)));
+    }
   }
+  return null;
 }
 
 export const libraryApi = {

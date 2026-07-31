@@ -6,7 +6,7 @@ import ChatMessage from "./ChatMessage";
 import AuthModal from "./AuthModal";
 import VoiceInput from "./VoiceInput";
 import Logo from "./Logo";
-import { chatApi, decodeSources, type ChatMessageDTO, type Source } from "../lib/api";
+import { chatApi, decodeSources, isRefusalAnswer, type ChatMessageDTO, type Source } from "../lib/api";
 
 interface Message {
   role: "user" | "assistant";
@@ -63,7 +63,9 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
           msgs.map((m) => ({
             role: m.role,
             content: m.content,
-            sources: m.sources ?? undefined,
+            // Never show citations under a refusal (covers older rows persisted
+            // before the backend started dropping sources for refusals).
+            sources: isRefusalAnswer(m.content) ? undefined : m.sources ?? undefined,
           }))
         );
       }
@@ -124,9 +126,14 @@ export default function ChatBox({ currentChatId, onChatIdChange }: ChatBoxProps)
           const { done, value } = await reader.read();
           if (done) break;
           accumulated += decoder.decode(value, { stream: true });
+          // Drop the retrieved sources the moment the answer reveals itself as a
+          // refusal / out-of-scope reply — no citations under "koi mustanad hawala
+          // nahi". The marker sits at the start of the refusal, so it hides before
+          // any flash. Real answers keep their sources.
+          const shown = isRefusalAnswer(accumulated) ? undefined : sources;
           setMessages((prev) => {
             const copy = [...prev];
-            copy[copy.length - 1] = { role: "assistant", content: accumulated, sources };
+            copy[copy.length - 1] = { role: "assistant", content: accumulated, sources: shown };
             return copy;
           });
         }
