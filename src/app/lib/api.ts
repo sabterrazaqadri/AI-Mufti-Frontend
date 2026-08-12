@@ -272,3 +272,131 @@ export const chatApi = {
   send: (body: { content: string; chat_id: string | null }, signal?: AbortSignal) =>
     apiFetch("/chat", { method: "POST", body: JSON.stringify(body), signal }),
 };
+
+/* ────────────────────────────────────────────────────────────────────────────
+   Video items — the curated pool AutoTube draws from.
+
+   These are admin-only routes: the backend verifies the same Better Auth JWT as
+   everywhere else, then checks the caller against its ADMIN_EMAILS allowlist.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+export type VideoCategory = "hadith" | "tafsir" | "hikayat" | "fiqh";
+export type Darja = "sahih" | "hasan" | "zaeef" | "na_maloom";
+
+export interface VideoCitation {
+  kitab?: string | null;
+  jild?: string | null;
+  safha?: string | null;
+  hadith_no?: string | null;
+  rawi?: string | null;
+}
+
+export interface SourceChunk {
+  id: string;
+  title: string | null;
+  reference: string | null;
+  content: string;
+  tags: string[];
+}
+
+export interface VideoItem {
+  id: string;
+  category: VideoCategory;
+  text_ur: string;
+  text_roman: string | null;
+  citation: VideoCitation;
+  citation_display: string;
+  citation_incomplete: boolean;
+  darja: Darja | null;
+  maslak_tag: string | null;
+  source_chunk_ids: string[];
+  status: "draft" | "approved" | "rejected";
+  allow_video: boolean;
+  word_count: number;
+  extractor_version: string | null;
+  review_note: string | null;
+  created_at: string;
+  /** Server's view of why this cannot be approved for video (mirrors the DB CHECK). */
+  publishable_failures: string[];
+  source_chunks?: SourceChunk[];
+}
+
+export interface QueueCounts {
+  by_status: Record<string, number>;
+  drafts_by_category: Record<string, number>;
+  video_ready_by_category: Record<string, number>;
+  video_ready_total: number;
+  drafts_citation_incomplete: number;
+}
+
+export const videoItemsApi = {
+  list: (params: {
+    status?: string;
+    category?: string;
+    citation_incomplete?: boolean;
+    limit?: number;
+    offset?: number;
+  }) => {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== "") q.set(k, String(v));
+    });
+    return apiFetch(`/api/admin/video-items?${q.toString()}`);
+  },
+
+  update: (id: string, fields: Partial<VideoItem>) =>
+    apiFetch(`/api/admin/video-items/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(fields),
+    }),
+
+  approve: (id: string, allowVideo: boolean) =>
+    apiFetch(`/api/admin/video-items/${id}/approve`, {
+      method: "POST",
+      body: JSON.stringify({ allow_video: allowVideo }),
+    }),
+
+  reject: (id: string, reviewNote: string) =>
+    apiFetch(`/api/admin/video-items/${id}/reject`, {
+      method: "POST",
+      body: JSON.stringify({ review_note: reviewNote }),
+    }),
+
+  whoami: () => apiFetch("/api/admin/whoami"),
+};
+
+/** Publishable band for a 30-60s Short. Mirrors backend video_items.py. */
+export const MIN_VIDEO_WORDS = 25;
+export const MAX_VIDEO_WORDS = 160;
+
+export function wordCount(text: string): number {
+  const t = (text || "").trim();
+  return t ? t.split(/\s+/).length : 0;
+}
+
+/**
+ * Why "approve & allow video" is unavailable — the same four conditions the
+ * database CHECK constraint enforces.
+ *
+ * Duplicated in the browser on purpose: the reviewer edits an item before
+ * approving it, and the answer has to update as they type. The server's copy is
+ * still the one that decides, and the DB constraint is what actually guarantees it.
+ */
+export function publishableFailures(item: {
+  citation_incomplete: boolean;
+  category: VideoCategory;
+  darja: Darja | null;
+  text_ur: string;
+}): string[] {
+  const fails: string[] = [];
+  if (item.citation_incomplete) fails.push("citation is incomplete");
+  if (item.category === "hadith" && item.darja !== "sahih" && item.darja !== "hasan") {
+    fails.push("hadith grading must be sahih or hasan");
+  }
+  if (item.category === "fiqh") fails.push("fiqh is not served to video in v1");
+  const wc = wordCount(item.text_ur);
+  if (wc < MIN_VIDEO_WORDS || wc > MAX_VIDEO_WORDS) {
+    fails.push(`length ${wc} words is outside ${MIN_VIDEO_WORDS}-${MAX_VIDEO_WORDS}`);
+  }
+  return fails;
+}
