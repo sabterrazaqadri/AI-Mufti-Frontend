@@ -18,6 +18,11 @@ import styles from "./review.module.css";
 const CATEGORIES: VideoCategory[] = ["hadith", "tafsir", "hikayat", "fiqh"];
 const DARJAT: Darja[] = ["sahih", "hasan", "zaeef", "na_maloom"];
 const CITATION_FIELDS = ["kitab", "jild", "safha", "hadith_no", "rawi"] as const;
+const STATUS_TABS: { id: "draft" | "approved" | "rejected"; label: string }[] = [
+  { id: "draft", label: "Draft" },
+  { id: "approved", label: "Approved" },
+  { id: "rejected", label: "Rejected" },
+];
 /** v1 launch target across hadith + tafsir + hikayat. */
 const LAUNCH_TARGET = 200;
 
@@ -83,13 +88,13 @@ function Highlighted({ text, needle }: { text: string; needle: string }) {
 
 /* ── The queue ─────────────────────────────────────────────────────────── */
 
-type Filters = { category: string; incomplete: string };
+type Filters = { status: "draft" | "approved" | "rejected"; category: string; incomplete: string };
 
 export default function ReviewQueue() {
   const [items, setItems] = useState<VideoItem[]>([]);
   const [counts, setCounts] = useState<QueueCounts | null>(null);
   const [cursor, setCursor] = useState(0);
-  const [filters, setFilters] = useState<Filters>({ category: "", incomplete: "" });
+  const [filters, setFilters] = useState<Filters>({ status: "draft", category: "", incomplete: "" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
@@ -114,7 +119,7 @@ export default function ReviewQueue() {
     setError(null);
     try {
       const res = await videoItemsApi.list({
-        status: "draft",
+        status: filters.status,
         category: filters.category || undefined,
         citation_incomplete:
           filters.incomplete === "" ? undefined : filters.incomplete === "yes",
@@ -359,6 +364,22 @@ export default function ReviewQueue() {
       </header>
 
       <div className={styles.toolbar}>
+        <div className={styles.statusTabs}>
+          {STATUS_TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              className={
+                filters.status === tab.id
+                  ? `${styles.statusTab} ${styles.statusTabActive}`
+                  : styles.statusTab
+              }
+              onClick={() => setFilters((f) => ({ ...f, status: tab.id }))}
+            >
+              {tab.label} ({counts?.by_status?.[tab.id] ?? 0})
+            </button>
+          ))}
+        </div>
         <label>
           Category
           <select
@@ -369,7 +390,8 @@ export default function ReviewQueue() {
             <option value="">all</option>
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>
-                {c} ({counts?.drafts_by_category?.[c] ?? 0})
+                {c}
+                {filters.status === "draft" ? ` (${counts?.drafts_by_category?.[c] ?? 0})` : ""}
               </option>
             ))}
           </select>
@@ -388,7 +410,7 @@ export default function ReviewQueue() {
         </label>
         <span className={styles.queueInfo}>
           {items.length ? `${cursor + 1} of ${items.length} loaded` : "—"}
-          {counts ? ` · ${counts.by_status?.draft ?? 0} drafts total` : ""}
+          {counts ? ` · ${counts.by_status?.[filters.status] ?? 0} ${filters.status} total` : ""}
         </span>
         <span className={styles.keys}>
           <kbd>a</kbd> approve+video · <kbd>n</kbd> approve · <kbd>r</kbd> reject ·{" "}
@@ -403,8 +425,14 @@ export default function ReviewQueue() {
       {loading && <p className={styles.muted}>Loading the queue…</p>}
       {!loading && !error && !current && (
         <p className={styles.muted}>
-          No drafts match this filter. Run{" "}
-          <code>python extract_video_items.py --book &lt;slug&gt;</code> to propose more.
+          {filters.status === "draft" ? (
+            <>
+              No drafts match this filter. Run{" "}
+              <code>python extract_video_items.py --book &lt;slug&gt;</code> to propose more.
+            </>
+          ) : (
+            `No ${filters.status} items match this filter.`
+          )}
         </p>
       )}
 

@@ -90,6 +90,32 @@
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
+
+.statusTabs {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  background: var(--surface-hover, var(--bg));
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+.statusTab {
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.statusTab:hover { color: var(--text); }
+.statusTabActive {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
 .keys {
   margin-left: auto;
   color: var(--text-secondary);
